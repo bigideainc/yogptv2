@@ -1,0 +1,32 @@
+{
+  "baseModel": "openai-community/gpt2",
+  "seed": "Random",
+  "huggingFaceId": "HuggingFaceFW/fineweb",
+  "fineTuningType": "text-generation",
+  "suffix": "GPT2-FineWeb",
+  "numberOfEpochs": "0",
+  "userId": "dZhabDtALkOxnJYluQUrCBvRrGd2",
+  "batchSizeAuto": "true",
+  "numberOfEpochsAuto": "true",
+  "validationDataOption": "multiSelect",
+  "trainingDataOption": "selectExisting",
+  "modelParams": "137022720 Params",
+  "validationCriteria": "Accuracy",
+  "learningRateMultiplier": "0",
+  "expectedOutcome": "aaqswderftgdebvswcvwdbfsaqzexrc",
+  "learningRateAuto": "true",
+  "batchSize": "0",
+  "paramsCount": null,
+  "status": "pending",
+  "createdAt": {
+    "_seconds": 1714619020,
+    "_nanoseconds": 907000000
+  },
+  "scriptPath": "",
+  "validationFilePath": "validation/VHR8GJjKYX91qxQHQkyB/training_script-1714619019904.py",
+  "trainingFilePath": "",
+  "scriptUrl": "",
+  "trainingFileUrl": "",
+  "validationFileUrl": "https://storage.googleapis.com/echo-fe663.appspot.com/validation/VHR8GJjKYX91qxQHQkyB/training_script-1714619019904.py?GoogleAccessId=firebase-adminsdk-x8w53%40echo-fe663.iam.gserviceaccount.com&Expires=16447006800&Signature=PI0ktMNfe5vzqf4l6DgYG2HIoQYFfHEcFSc3bP%2FzxfZxcY%2FsxNuS0qoW9TZr18YxCuFSJOtBNhMvsdwUvzOjwVNG5EpMcqKMb6m1zbLRxvR%2FwS3uWqlqEOBLvVcoW7N8c%2BH2ntBUWeTdxx9h6tnvrMIf%2BwCUgIQBVuqLfXzBU01hK18%2BZWyvxnFF69mfomht5XPL1E0Pnd2LuHriCo8kAeGit%2BTI5qerZrr8d%2FkM3rjWRmxV8bMB9Xt%2FutppNmFQ0x9ZR06A7EbiS5xBpCKrqnUMc2UuiSdC8Sf0eAyXZoju5eOaLhZX4UvVyOL5UOA%2Bf%2FeLuH67kOgK7crhPR0sQg%3D%3D",
+  "jobId": "VHR8GJjKYX91qxQHQkyB"
+}

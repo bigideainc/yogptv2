@@ -1,40 +1,15 @@
 [tool.poetry]
-name = "mosaic-subnet"
+name = "yourowngpt"
 version = "0.1.0"
-description = ""
-authors = []
+description = "finetune llms"
+authors = ["Tobius <tobiusaolo21@gmail.com>"]
 readme = "README.md"
-packages = [{ include = "mosaic_subnet" }]
+
 [tool.poetry.dependencies]
 python = "^3.10"
-diffusers = "^0.27.2"
-pydantic = "^2.6.4"
-pydantic-settings = "^2.2.1"
-typer = "^0.9.0"
-rich = "^13.7.0"
-fastapi = "^0.110.0"
-uvicorn = "^0.29.0"
-keylimiter = "^0.1.5"
-communex = "^0.1.28"
-transformers = "^4.40.1"
-torch = [
-    { version = "2.3.0", source = "pypi", markers = "sys_platform == 'darwin' and platform_machine == 'arm64'" },
-    { version = "2.2.2", source = "pypi", markers = "sys_platform == 'darwin' and platform_machine == 'x86_64'" },
-    { url = "https://download.pytorch.org/whl/cu121/torch-2.2.2%2Bcu121-cp310-cp310-linux_x86_64.whl", python = ">=3.10,<3.11", markers = "sys_platform == 'linux'" },
-    { url = "https://download.pytorch.org/whl/cu121/torch-2.2.2%2Bcu121-cp311-cp311-linux_x86_64.whl", python = ">=3.11,<3.12", markers = "sys_platform == 'linux'" },
-]
-accelerate = "^0.29.3"
-httpx = "^0.27.0"
-datasets = "^2.19.0"
-loguru = "^0.7.2"
-supervisor = "^4.2.5"
-pylint = "^3.1.0"
-attrs = "^23.2.0"
-hpsv2x = "^1.2.0"
+communex = "^0.1.32"
 
-[tool.poetry.group.dev.dependencies]
-jupyterlab = "^4.2.0"
 
 [build-system]
-requires = ["poetry-core>=1.8.2"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

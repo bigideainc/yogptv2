@@ -1,0 +1,32 @@
+{
+  "baseModel": "FacebookAI/xlm-mlm-tlm-xnli15-1024",
+  "seed": "Random",
+  "huggingFaceId": "HuggingFaceFW/fineweb",
+  "fineTuningType": "text-generation",
+  "suffix": "Facebook-Model",
+  "numberOfEpochs": "0",
+  "userId": "dZhabDtALkOxnJYluQUrCBvRrGd2",
+  "batchSizeAuto": "true",
+  "numberOfEpochsAuto": "true",
+  "validationDataOption": "multiSelect",
+  "trainingDataOption": "selectExisting",
+  "modelParams": "N/A Params",
+  "validationCriteria": "Accuracy",
+  "learningRateMultiplier": "0",
+  "expectedOutcome": "dfgdfgdfgd",
+  "learningRateAuto": "true",
+  "batchSize": "0",
+  "paramsCount": null,
+  "status": "pending",
+  "createdAt": {
+    "_seconds": 1714824913,
+    "_nanoseconds": 770000000
+  },
+  "scriptPath": "",
+  "validationFilePath": "validation/K1gTPVVTLQGUFTpS5vkQ/training_script-1714824909942.py",
+  "trainingFilePath": "",
+  "scriptUrl": "",
+  "trainingFileUrl": "",
+  "validationFileUrl": "https://storage.googleapis.com/echo-fe663.appspot.com/validation/K1gTPVVTLQGUFTpS5vkQ/training_script-1714824909942.py?GoogleAccessId=firebase-adminsdk-x8w53%40echo-fe663.iam.gserviceaccount.com&Expires=16447006800&Signature=kM%2Fe2zp7uCOV2uKttSmx8xDAczfvOh3ynypWPHxlEByBO%2F6dyHdG7nicbE553uz2%2Fxn12ev7Z4y%2Fexlua5YKYGTbYooj1%2FQC2b19xG2hmpEIBfuWHIAEm9kB73tOOHl32HoLCIvpPT0PO1Ho3xjuVRellE1my7E%2BjOGZBMmHugsQtr2P90vFhUq8ENvmL5ZJGCAoCe0%2FOJPdkWTXuRxtQTEx7b%2FqDlAMWRrBzRf86nJ5mb8agYYFjep95vQUZTKsLOsz67e6O4N%2BwBublgIkqXr3BPn8LLX0Bf9FdrrxH5YhbJ3U28T2fPFPltp8b%2BUmMUBgvLiCeJY0abT3FU0yYA%3D%3D",
+  "jobId": "K1gTPVVTLQGUFTpS5vkQ"
+}

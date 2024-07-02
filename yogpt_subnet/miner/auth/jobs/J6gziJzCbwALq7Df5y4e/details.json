@@ -1,0 +1,32 @@
+{
+  "baseModel": "NousResearch/Llama-2-7b-chat-hf",
+  "seed": "Random",
+  "huggingFaceId": "mlabonne/guanaco-llama2-1k",
+  "fineTuningType": "text-generation",
+  "suffix": "LLama Model Ug",
+  "numberOfEpochs": "0",
+  "userId": "r18gBFF3OSZH9NrWKWGXbzpSwPh1",
+  "batchSizeAuto": "true",
+  "numberOfEpochsAuto": "true",
+  "validationDataOption": "none",
+  "trainingDataOption": "selectExisting",
+  "modelParams": "",
+  "validationCriteria": "",
+  "learningRateMultiplier": "0",
+  "expectedOutcome": "Agricultural Assistant",
+  "learningRateAuto": "true",
+  "batchSize": "0",
+  "paramsCount": null,
+  "status": "pending",
+  "createdAt": {
+    "_seconds": 1716406343,
+    "_nanoseconds": 846000000
+  },
+  "scriptPath": "",
+  "validationFilePath": "validation/J6gziJzCbwALq7Df5y4e/training_script-1716406340022.py",
+  "trainingFilePath": "",
+  "scriptUrl": "",
+  "trainingFileUrl": "",
+  "validationFileUrl": "https://storage.googleapis.com/echo-fe663.appspot.com/validation/J6gziJzCbwALq7Df5y4e/training_script-1716406340022.py?GoogleAccessId=firebase-adminsdk-x8w53%40echo-fe663.iam.gserviceaccount.com&Expires=16447006800&Signature=cZDi9OK6kpkXkk4zfpb98Y5Bw4X1i849nCvAmEWItZWis51ao%2BehnveRf%2Fq92kuKw7VsYi42PKr4ag%2F7kyAwBDGmIK3ZgPXU6IFoMyaoxQGPLC8XtICongxpVaVg1nSjiP1qTJkanYxFg18gpr%2BZuPzDipQPge57dH5X0WgeeJoGw1TPw69QXETNDJYr71zdCcQjatRQ5NMHZbZ3Fm8NiTnXWF0WXnIMDIBLy0cio%2Bi%2FtJqJzC7oGz6WzT9HUUsWgGyrNII8zuDeKYMle6sOhJbtbQUjARPhvq31U57P4LIGfKM844kmTm7qyhBbsgqmJh2cpuYFTSvTyT4tLqbKNA%3D%3D",
+  "jobId": "J6gziJzCbwALq7Df5y4e"
+}
