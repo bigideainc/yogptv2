@@ -45,13 +45,13 @@ class Miner(Module):
 
     def run_trainer(self):
         parser = argparse.ArgumentParser(description="Automated training and uploading")
-        parser.add_argument('--wallet_address', type=str, required=True)
-        parser.add_argument('--runpod', action='store_true', help="Run the job on RunPod")
-        parser.add_argument('--runpod_api_key', type=str, help="RunPod API key")
-        args = parser.parse_args()
-
+        # parser.add_argument('--wallet_address', type=str, required=True)
+        # parser.add_argument('--runpod', action='store_true', help="Run the job on RunPod")
+        # parser.add_argument('--runpod_api_key', type=str, help="RunPod API key")
+        # args = parser.parse_args()
         signal.signal(signal.SIGINT, self.trainer.handle_interrupt)
-        asyncio.run(self.trainer.main(args))
+        asyncio.run(self.trainer.main())
+        # asyncio.run(self.trainer.main())
 
 
 if __name__ == "__main__":

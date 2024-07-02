@@ -26,10 +26,10 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), './', 'a
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'finetune/runpod')))
 
 from yogpt_subnet.miner.auth.auth import authenticate # type:ignore
-from gpt_fine_tune import fine_tune_gpt
+from yogpt_subnet.miner.finetune.gpt_fine_tune import fine_tune_gpt
 # from helpers import (fetch_and_save_job_details, fetch_jobs, register_completed_job, submit_to_runpod, update_job_status)
-# from llama_fine_tune import fine_tune_llama
-# from open_elm import fine_tune_openELM
+# from yogpt_subnet.miner.finetune.llama_fine_tune import fine_tune_llama # type:ignore
+# from yogpt_subnet.miner.finetune.open_elm import fine_tune_openELM # type:ignore
 # from pipeline import generate_pipeline_script
 # from t5_fine_tune import fine_tune_t5
 
@@ -192,12 +192,12 @@ class Trainer:
                 await asyncio.sleep(2)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Automated training and uploading")
-    parser.add_argument('--wallet_address', type=str, required=True)
-    parser.add_argument('--runpod', action='store_true', help="Run the job on RunPod")
-    parser.add_argument('--runpod_api_key', type=str, help="RunPod API key")
-    args = parser.parse_args()
+    # parser = argparse.ArgumentParser(description="Automated training and uploading")
+    # parser.add_argument('--wallet_address', type=str, required=True)
+    # parser.add_argument('--runpod', action='store_true', help="Run the job on RunPod")
+    # parser.add_argument('--runpod_api_key', type=str, help="RunPod API key")
+    # args = parser.parse_args()
 
     trainer = Trainer()
     signal.signal(signal.SIGINT, trainer.handle_interrupt)
-    asyncio.run(trainer.main(args))
+    # asyncio.run(trainer.main(args))
