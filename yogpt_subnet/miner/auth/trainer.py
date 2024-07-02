@@ -25,14 +25,13 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'u
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), './', 'auth')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'finetune/runpod')))
 
-from auth import authenticate
-from bert_fine_tune import fine_tune_bert
+from yogpt_subnet.miner.auth.auth import authenticate # type:ignore
 from gpt_fine_tune import fine_tune_gpt
-from helpers import (fetch_and_save_job_details, fetch_jobs, register_completed_job, submit_to_runpod, update_job_status)
-from llama_fine_tune import fine_tune_llama
-from open_elm import fine_tune_openELM
-from pipeline import generate_pipeline_script
-from t5_fine_tune import fine_tune_t5
+# from helpers import (fetch_and_save_job_details, fetch_jobs, register_completed_job, submit_to_runpod, update_job_status)
+# from llama_fine_tune import fine_tune_llama
+# from open_elm import fine_tune_openELM
+# from pipeline import generate_pipeline_script
+# from t5_fine_tune import fine_tune_t5
 
 class Trainer:
     def __init__(self):

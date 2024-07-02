@@ -7,9 +7,9 @@ from substrateinterface import Keypair
 from communex.key import generate_keypair
 from communex._common import get_node_url
 
-from yogpt_subnet.miner._config import MinerSettings
+from yogpt_subnet.miner._config import MinerSettings # type:ignore
 from yogpt_subnet.base.utils import get_netuid
-from yogpt_subnet.miner.auth.trainer import Trainer  
+from yogpt_subnet.miner.auth.trainer import Trainer  # type:ignore
 
 import sys
 import threading

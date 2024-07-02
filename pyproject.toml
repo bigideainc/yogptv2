@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "yourowngpt"
+name = "yogpt-subnet"
 version = "0.1.0"
-description = "finetune llms"
-authors = ["Tobius <tobiusaolo21@gmail.com>"]
+description = ""
+authors = []
 readme = "README.md"
-
+packages = [{ include = "yogpt_subnet" }]
 [tool.poetry.dependencies]
 python = "^3.10"
 communex = "^0.1.32"
