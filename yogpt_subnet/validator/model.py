@@ -3,8 +3,23 @@ from firebase_admin import credentials, firestore
 from datetime import datetime, timedelta
 from communex.module.module import Module
 from loguru import logger
+import os
+import warnings
+from dotenv import load_dotenv
 
-cred = credentials.Certificate("validator/jarvis_access.json")
+warnings.filterwarnings(
+    "ignore",
+    message="Detected filter using positional arguments. Prefer using the 'filter' keyword argument instead."
+)
+
+load_dotenv()
+
+cred_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+
+if not os.path.exists(cred_path):
+    raise FileNotFoundError(f"Credential file not found: {cred_path}")
+
+cred = credentials.Certificate(cred_path)
 firebase_admin.initialize_app(cred)
 
 db = firestore.client()

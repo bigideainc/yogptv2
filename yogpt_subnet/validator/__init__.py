@@ -14,8 +14,9 @@ from loguru import logger
 from pydantic import BaseModel
 from substrateinterface import Keypair
 
-from yogpt_subnet.validator._config import ValidatorSettings
-from yogpt_subnet.validator.model import ModelRewardChecker
+from yogpt_subnet.base.utils import get_netuid #type:ignore
+from yogpt_subnet.validator._config import ValidatorSettings #type:ignore
+from yogpt_subnet.validator.model import ModelRewardChecker #type:ignore
 
 class WeightHistory(BaseModel):
     time: datetime
@@ -26,7 +27,12 @@ class Validator(Module):
         super().__init__()
         self.settings = settings or ValidatorSettings()
         self.key = key
+        self.netuid = get_netuid(self.c_client)
         self.reward_checker = ModelRewardChecker()
+    
+    @property
+    def c_client(self):
+        return CommuneClient(get_node_url(use_testnet=self.settings.use_testnet))
 
     @endpoint
     def get_weights_history(self):
@@ -72,4 +78,4 @@ class Validator(Module):
 
 if __name__ == "__main__":
     settings = ValidatorSettings(use_testnet=True)
-    Validator(key=classic_load_key("mosaic-validator0"), settings=settings).serve()
+    Validator(key=classic_load_key("yogpt-validator0"), settings=settings).serve()
