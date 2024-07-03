@@ -1,0 +1,29 @@
+{
+  "baseModel": "NousResearch/Llama-2-7b-chat-hf",
+  "seed": "Random",
+  "huggingFaceId": "mlabonne/guanaco-llama2-1k",
+  "fineTuningType": "text-generation",
+  "suffix": "",
+  "numberOfEpochs": 5,
+  "userId": "r18gBFF3OSZH9NrWKWGXbzpSwPh1",
+  "batchSizeAuto": true,
+  "numberOfEpochsAuto": true,
+  "createdAt": {
+    "_seconds": 1720015810,
+    "_nanoseconds": 412000000
+  },
+  "validationDataOption": "none",
+  "trainingDataOption": "selectExisting",
+  "modelParams": "",
+  "validationCriteria": [
+    ""
+  ],
+  "learningRateMultiplier": 1,
+  "learningRateAuto": true,
+  "batchSize": 50,
+  "status": "pending",
+  "scriptUrl": "",
+  "trainingFileUrl": "",
+  "validationFileUrl": "",
+  "jobId": "ParAMxazBnRTt9UcQwnj"
+}

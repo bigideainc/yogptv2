@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from communex.module.module import Module
 from loguru import logger
 
-cred = credentials.Certificate("jarvis_access.json")
+cred = credentials.Certificate("validator/jarvis_access.json")
 firebase_admin.initialize_app(cred)
 
 db = firestore.client()

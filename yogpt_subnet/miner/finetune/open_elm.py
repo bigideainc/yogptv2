@@ -6,8 +6,8 @@ import uuid
 
 import torch
 from datasets import load_dataset
-from yogpt_subnet.miner.utils.helpers import update_job_status
-from storage.hugging_face_store import HuggingFaceModelStore
+from yogpt_subnet.miner.utils.helpers import update_job_status #type:ignore
+from yogpt_subnet.miner.models.storage.hugging_face_store import HuggingFaceModelStore 
 from transformers import (AutoModelForCausalLM, AutoTokenizer,TrainingArguments, get_constant_schedule, set_seed)
 from trl import DataCollatorForCompletionOnlyLM, SFTTrainer, setup_chat_format
 

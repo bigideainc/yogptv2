@@ -22,7 +22,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../', '
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), './', 'auth')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'finetune/runpod')))
-
 from yogpt_subnet.miner.auth.auth import authenticate # type:ignore
 from yogpt_subnet.miner.finetune.gpt_fine_tune import fine_tune_gpt #type:ignore
 from yogpt_subnet.miner.utils.helpers import (fetch_and_save_job_details, fetch_jobs, register_completed_job, submit_to_runpod, update_job_status) #type:ignore
@@ -117,14 +116,20 @@ class Trainer(Module):
                 submit_to_runpod(script_path, runpod_api_key)
             else:
                 model_repo_url = None
-                if 'llama' in model_id:
+                self.console.log(f"General model "+model_id)
+                model_detected = model_id.lower()
+                if 'llama' in model_detected:
+                    self.console.log(f"model is  of type Llama:"+model_id)
                     model_repo_url = await fine_tune_llama(model_id, dataset_id, new_model_name, self.HF_ACCESS_TOKEN, job_id)
                 elif 'gpt' in model_id:
+                    self.console.log(f"model is  of type GPT:"+model_id)
                     model_repo_url = await fine_tune_gpt(model_id, dataset_id, new_model_name, self.HF_ACCESS_TOKEN, job_id)
                 elif 'openelm' in model_id:
+                    self.console.log(f"model is  of type OpenELM:"+model_id)
                     model_repo_url = await fine_tune_openELM(model_id, dataset_id, new_model_name, self.HF_ACCESS_TOKEN, job_id)
                 else:
                     self.console.log(f"Unsupported model ID: {model_id}. Skipping job.")
+                
                     return  # Skip this job and proceed to the next one
 
                 self.console.log(f"Model uploaded to: {model_repo_url}")

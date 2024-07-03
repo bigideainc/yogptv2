@@ -1,0 +1,29 @@
+{
+  "baseModel": "13on/gpt2-wishes",
+  "seed": "Random",
+  "huggingFaceId": "tomasonjo/text2cypher-gpt4o-clean",
+  "fineTuningType": "text-generation",
+  "suffix": "",
+  "numberOfEpochs": 5,
+  "userId": "mbeiZfB2mxaaygteafzTRfp7L4L2",
+  "batchSizeAuto": true,
+  "numberOfEpochsAuto": true,
+  "createdAt": {
+    "_seconds": 1720004885,
+    "_nanoseconds": 299000000
+  },
+  "validationDataOption": "none",
+  "trainingDataOption": "selectExisting",
+  "modelParams": "N/A Params",
+  "validationCriteria": [
+    ""
+  ],
+  "learningRateMultiplier": 1,
+  "learningRateAuto": true,
+  "batchSize": 50,
+  "status": "pending",
+  "scriptUrl": "",
+  "trainingFileUrl": "",
+  "validationFileUrl": "",
+  "jobId": "nyEacAU96y5VjDuZEGC6"
+}

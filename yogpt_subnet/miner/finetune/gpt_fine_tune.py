@@ -10,16 +10,22 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../', '
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../', 'model')))
 
 from datasets import load_dataset
-from yogpt_subnet.miner.utils.helpers import update_job_status
+from yogpt_subnet.miner.utils.helpers import update_job_status #type:ignore
 from huggingface_hub import HfApi, Repository
 from transformers import (GPT2LMHeadModel, GPT2Tokenizer, Trainer,TrainingArguments)
 
+new_model_name="gpt2_model_finetuned"
 
 async def fine_tune_gpt(job_id, base_model, dataset_id, new_model_name, hf_token):
     """Fine-tunes a GPT-2 model and uploads it to Hugging Face Hub."""
     # print(f"Transformer version: {transformers.__version__}")
 
     # Designate directories
+    base_model = str(base_model)
+    print("------basemodel specified-----" + base_model)
+    print(".......new_model_name ........" + new_model_name)
+    print(".......dataset specified ........" + dataset_id)
+    
     dataset_dir = os.path.join("data", dataset_id)
     os.makedirs(dataset_dir, exist_ok=True)
 
