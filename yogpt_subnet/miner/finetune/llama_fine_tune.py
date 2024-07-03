@@ -1,12 +1,10 @@
 # fine_tune_llama.py
-
 import asyncio
 import os
 import shutil
-
 import torch
 from datasets import load_dataset
-from helpers import update_job_status
+from yogpt_subnet.miner.utils.helpers import update_job_status
 from huggingface_hub import HfApi, Repository
 from peft import LoraConfig
 from transformers import (AutoModelForCausalLM, AutoTokenizer,BitsAndBytesConfig, TrainingArguments)

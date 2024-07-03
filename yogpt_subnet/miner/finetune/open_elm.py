@@ -6,10 +6,9 @@ import uuid
 
 import torch
 from datasets import load_dataset
-from helpers import update_job_status
+from yogpt_subnet.miner.utils.helpers import update_job_status
 from storage.hugging_face_store import HuggingFaceModelStore
-from transformers import (AutoModelForCausalLM, AutoTokenizer,
-                          TrainingArguments, get_constant_schedule, set_seed)
+from transformers import (AutoModelForCausalLM, AutoTokenizer,TrainingArguments, get_constant_schedule, set_seed)
 from trl import DataCollatorForCompletionOnlyLM, SFTTrainer, setup_chat_format
 
 # Append directories to sys.path for relative imports

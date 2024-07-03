@@ -1,5 +1,3 @@
-# trainer.py
-
 import argparse
 import asyncio
 import json
@@ -8,7 +6,7 @@ import signal
 import ssl
 import sys
 import time
-
+from communex.module.module import Module,endpoint
 import aiohttp
 import pyfiglet
 from dotenv import load_dotenv
@@ -26,14 +24,12 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), './', 'a
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'finetune/runpod')))
 
 from yogpt_subnet.miner.auth.auth import authenticate # type:ignore
-from yogpt_subnet.miner.finetune.gpt_fine_tune import fine_tune_gpt
-# from helpers import (fetch_and_save_job_details, fetch_jobs, register_completed_job, submit_to_runpod, update_job_status)
-# from yogpt_subnet.miner.finetune.llama_fine_tune import fine_tune_llama # type:ignore
-# from yogpt_subnet.miner.finetune.open_elm import fine_tune_openELM # type:ignore
-# from pipeline import generate_pipeline_script
-# from t5_fine_tune import fine_tune_t5
+from yogpt_subnet.miner.finetune.gpt_fine_tune import fine_tune_gpt #type:ignore
+from yogpt_subnet.miner.utils.helpers import (fetch_and_save_job_details, fetch_jobs, register_completed_job, submit_to_runpod, update_job_status) #type:ignore
+from yogpt_subnet.miner.finetune.llama_fine_tune import fine_tune_llama # type:ignore
+from yogpt_subnet.miner.finetune.open_elm import fine_tune_openELM # type:ignore
 
-class Trainer:
+class Trainer(Module):
     def __init__(self):
         load_dotenv()
         self.BASE_URL = os.getenv("BASE_URL")
@@ -43,12 +39,14 @@ class Trainer:
         self.console = Console()
         self.current_job_id = None  # Global variable to store the current job ID
 
+    @endpoint
     def display_welcome_message(self):
         fig = pyfiglet.Figlet(font='slant')
         welcome_text = fig.renderText('YOGPT Miner')
         self.console.print(welcome_text, style="bold blue")
         self.console.print(Panel(Text("Welcome to YOGPT Miner System!", justify="center"), style="bold green"))
 
+    @endpoint
     async def fetch_jobs(self):
         timeout = aiohttp.ClientTimeout(total=120)  # Increased timeout to 120 seconds
         ssl_context = ssl.create_default_context()
@@ -69,7 +67,7 @@ class Trainer:
             except aiohttp.ClientConnectorError as e:
                 self.console.log(f"Connection error: {e}")
                 return []
-
+            
     async def fetch_and_save_job_details(self, job_id):
         async with aiohttp.ClientSession() as session:
             headers = {'Authorization': f'Bearer {self.TOKEN}'}
@@ -86,7 +84,7 @@ class Trainer:
                 else:
                     self.console.log(f"Failed to start training for job {job_id}: {await response.text()}")
                     return None
-
+ 
     async def update_job_status(self, job_id, status):
         url = f"{self.BASE_URL}/update-status/{job_id}"
         async with aiohttp.ClientSession() as session:
@@ -101,7 +99,7 @@ class Trainer:
                     self.console.log(f"Failed to update status for job {job_id}: {err}")
                 except Exception as e:
                     self.console.log(f"An error occurred: {e}")
-
+  
     async def process_job(self, job_details, run_on_runpod=False, runpod_api_key=None):
         global current_job_id
         model_id = job_details['baseModel']
@@ -140,14 +138,14 @@ class Trainer:
             self.console.log(f"Unexpected error occurred while processing job {job_id}: {str(e)}")
         finally:
             self.current_job_id = None  # Reset the current job ID
-
+            
     def handle_interrupt(self, signal, frame):
         if self.current_job_id:
             asyncio.run(self.update_job_status(self.current_job_id, 'pending'))
         self.console.log("[bold red]Interrupted. Exiting...[/bold red]")
         sys.exit(0)
 
-    async def main(self, args):
+    async def main(self):
         self.display_welcome_message()
 
         username = input("Enter your username: ")
@@ -184,7 +182,7 @@ class Trainer:
 
                         with open(job_details_path, 'r') as file:
                             job_details = json.load(file)
-                        await self.process_job(job_details, run_on_runpod=args.runpod, runpod_api_key=args.runpod_api_key)
+                        await self.process_job(job_details)
 
                         status_panel = Panel("Waiting for training jobs...", title="Status", border_style="green")
                         live.update(progress_table)
@@ -192,12 +190,6 @@ class Trainer:
                 await asyncio.sleep(2)
 
 if __name__ == "__main__":
-    # parser = argparse.ArgumentParser(description="Automated training and uploading")
-    # parser.add_argument('--wallet_address', type=str, required=True)
-    # parser.add_argument('--runpod', action='store_true', help="Run the job on RunPod")
-    # parser.add_argument('--runpod_api_key', type=str, help="RunPod API key")
-    # args = parser.parse_args()
-
     trainer = Trainer()
     signal.signal(signal.SIGINT, trainer.handle_interrupt)
-    # asyncio.run(trainer.main(args))
+    asyncio.run(trainer.main())

@@ -10,10 +10,9 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../', '
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../', 'model')))
 
 from datasets import load_dataset
-from helpers import update_job_status
+from yogpt_subnet.miner.utils.helpers import update_job_status
 from huggingface_hub import HfApi, Repository
-from transformers import (GPT2LMHeadModel, GPT2Tokenizer, Trainer,
-                          TrainingArguments)
+from transformers import (GPT2LMHeadModel, GPT2Tokenizer, Trainer,TrainingArguments)
 
 
 async def fine_tune_gpt(job_id, base_model, dataset_id, new_model_name, hf_token):
