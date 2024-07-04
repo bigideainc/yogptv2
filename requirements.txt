@@ -31,3 +31,8 @@ sentence-transformers
 tokenizers
 trl
 peft
+communex
+typer
+uvicorn
+keylimiter
+pydantic-settings
