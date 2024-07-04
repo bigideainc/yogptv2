@@ -121,10 +121,10 @@ class Trainer(Module):
                 if 'llama' in model_detected:
                     self.console.log(f"model is  of type Llama:"+model_id)
                     model_repo_url = await fine_tune_llama(model_id, dataset_id, new_model_name, self.HF_ACCESS_TOKEN, job_id)
-                elif 'gpt' in model_id:
+                elif 'gpt' in model_detected:
                     self.console.log(f"model is  of type GPT:"+model_id)
                     model_repo_url = await fine_tune_gpt(model_id, dataset_id, new_model_name, self.HF_ACCESS_TOKEN, job_id)
-                elif 'openelm' in model_id:
+                elif 'openelm' in model_detected:
                     self.console.log(f"model is  of type OpenELM:"+model_id)
                     model_repo_url = await fine_tune_openELM(model_id, dataset_id, new_model_name, self.HF_ACCESS_TOKEN, job_id)
                 else:
