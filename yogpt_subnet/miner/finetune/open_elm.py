@@ -11,6 +11,7 @@ from yogpt_subnet.miner.models.storage.hugging_face_store import HuggingFaceMode
 from transformers import (AutoModelForCausalLM, AutoTokenizer,TrainingArguments, get_constant_schedule, set_seed)
 from trl import DataCollatorForCompletionOnlyLM, SFTTrainer, setup_chat_format
 
+
 # Append directories to sys.path for relative imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../', 'dataset')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../', 'model')))
@@ -24,12 +25,14 @@ async def fine_tune_openELM(job_id, base_model, dataset_id, new_model_name, hf_t
             trust_remote_code=True,
             device=torch.device("cuda" if torch.cuda.is_available() else "cpu"),
             torch_dtype=torch.float16,
+            token=hf_token
         )
 
         # Load tokenizer
         tokenizer = AutoTokenizer.from_pretrained(
-            base_model,
+            "TinyPixel/Llama-2-7B-bf16-sharded",
             trust_remote_code=True,
+            use_fast=False
         )
 
         set_seed(42)
