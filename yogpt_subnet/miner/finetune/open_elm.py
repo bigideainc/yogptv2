@@ -24,7 +24,8 @@ async def fine_tune_openELM(job_id, base_model, dataset_id, new_model_name, hf_t
             base_model,
             trust_remote_code=True,
             torch_dtype=torch.float16,
-            token=hf_token
+            token=hf_token,
+            use_cache=False
         )
 
         # Load tokenizer
@@ -51,8 +52,8 @@ async def fine_tune_openELM(job_id, base_model, dataset_id, new_model_name, hf_t
             output_dir=f"out_{run_id}",
             evaluation_strategy="steps",
             label_names=["labels"],
-            per_device_train_batch_size=8,
-            gradient_accumulation_steps=2,
+            per_device_train_batch_size=1,
+            gradient_accumulation_steps=8,
             save_steps=250,
             eval_steps=250,
             logging_steps=1,
@@ -63,6 +64,7 @@ async def fine_tune_openELM(job_id, base_model, dataset_id, new_model_name, hf_t
             bf16=False,
             report_to="tensorboard",
             gradient_checkpointing=True,
+            gradient_checkpointing_kwargs={"use_reentrant": False},
             group_by_length=True,
         )
 
