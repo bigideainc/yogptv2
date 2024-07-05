@@ -23,7 +23,6 @@ async def fine_tune_openELM(job_id, base_model, dataset_id, new_model_name, hf_t
         model = AutoModelForCausalLM.from_pretrained(
             base_model,
             trust_remote_code=True,
-            device=torch.device("cuda" if torch.cuda.is_available() else "cpu"),
             torch_dtype=torch.float16,
             token=hf_token
         )
