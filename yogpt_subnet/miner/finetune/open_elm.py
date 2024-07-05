@@ -61,6 +61,7 @@ async def fine_tune_openELM(job_id, base_model, dataset_id, new_model_name, hf_t
             lr_scheduler_type="constant",
             optim='paged_adamw_8bit',
             bf16=False,
+            report_to="tensorboard",
             gradient_checkpointing=True,
             group_by_length=True,
         )
