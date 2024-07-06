@@ -55,6 +55,7 @@ async def fine_tune_gpt(job_id, base_model, dataset_id, new_model_name, hf_token
             eval_steps=500,
             logging_steps=500,
             save_steps=500,
+            report_to="tensorboard",
             save_total_limit=3,
             prediction_loss_only=True
         )
