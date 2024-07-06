@@ -43,7 +43,7 @@ async def fine_tune_gpt(job_id, base_model, dataset_id, new_model_name, hf_token
             return tokenizer(examples["text"], truncation=True, padding="max_length", max_length=512)
         
         tokenized_dataset = dataset.map(tokenize_function, batched=True, remove_columns=dataset.column_names)
-
+        print("...... dataset loaded................")
         # Set training parameters
         training_args = TrainingArguments(
             output_dir='./results',
