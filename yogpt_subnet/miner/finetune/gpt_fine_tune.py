@@ -31,7 +31,7 @@ async def fine_tune_gpt(job_id, base_model, dataset_id, new_model_name, hf_token
 
     try:
         # Load dataset
-        dataset = load_dataset(dataset_id, split="train", cache_dir=dataset_dir)
+        dataset = load_dataset(dataset_id, split="train", cache_dir=dataset_dir,trust_remote_code=True)
 
         # Load GPT-2 tokenizer
         tokenizer = GPT2Tokenizer.from_pretrained(base_model, pad_token="<|endoftext|>")
