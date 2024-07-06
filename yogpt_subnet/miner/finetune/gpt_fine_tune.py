@@ -68,8 +68,9 @@ async def fine_tune_gpt(job_id, base_model, dataset_id, new_model_name, hf_token
         )
 
         # Train model
+        print(".......Training starting .......... ")
         trainer.train()
-
+        print(".......Training ended .......... ")
         # Create repository on Hugging Face and clone it locally
         api = HfApi()
         repo_url = api.create_repo(repo_id=new_model_name, token=hf_token)
