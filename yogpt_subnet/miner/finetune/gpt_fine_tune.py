@@ -39,6 +39,11 @@ async def fine_tune_gpt(job_id, base_model, dataset_id, new_model_name, hf_token
         # Load GPT-2 model
         model = GPT2LMHeadModel.from_pretrained(base_model)
 
+        def tokenize_function(examples):
+            return tokenizer(examples["text"], truncation=True, padding="max_length", max_length=512)
+        
+        tokenized_dataset = dataset.map(tokenize_function, batched=True, remove_columns=dataset.column_names)
+
         # Set training parameters
         training_args = TrainingArguments(
             output_dir='./results',
@@ -58,7 +63,7 @@ async def fine_tune_gpt(job_id, base_model, dataset_id, new_model_name, hf_token
         trainer = Trainer(
             model=model,
             args=training_args,
-            train_dataset=dataset,
+            train_dataset=tokenized_dataset,
             tokenizer=tokenizer
         )
 
