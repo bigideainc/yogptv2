@@ -46,17 +46,17 @@ async def fine_tune_gpt(job_id, base_model, dataset_id, new_model_name, hf_token
         print("...... dataset loaded................")
         # Set training parameters
         training_args = TrainingArguments(
-            output_dir='./results',
+             output_dir='./results',
             num_train_epochs=3,
             per_device_train_batch_size=4,
             warmup_steps=500,
             weight_decay=0.01,
             logging_dir='./logs',
-            save_strategy='epoch',
-            evaluation_strategy='steps',
             eval_steps=500,
             logging_steps=500,
-            load_best_model_at_end=True
+            save_steps=500,
+            save_total_limit=3,
+            prediction_loss_only=True
         )
 
         # Initialize Trainer
