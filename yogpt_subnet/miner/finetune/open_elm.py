@@ -10,10 +10,6 @@ from transformers import (AutoModelForCausalLM, AutoTokenizer,
                           TrainingArguments, set_seed)
 from trl import DataCollatorForCompletionOnlyLM, SFTTrainer, setup_chat_format
 
-from yogpt_subnet.miner.models.storage.hugging_face_store import \
-    HuggingFaceModelStore
-from yogpt_subnet.miner.utils.helpers import update_job_status  # type: ignore
-
 # Append directories to sys.path for relative imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../', 'dataset')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../', 'model')))
@@ -25,14 +21,16 @@ async def fine_tune_openELM(job_id, base_model, dataset_id, new_model_name, hf_t
         model = AutoModelForCausalLM.from_pretrained(
             base_model,
             trust_remote_code=True,
-            device=torch.device("cuda" if torch.cuda.is_available() else "cpu"),
             torch_dtype=torch.float16,
+            token=hf_token,
+            use_cache=False
         )
 
         # Load tokenizer
         tokenizer = AutoTokenizer.from_pretrained(
-            base_model,
+            "TinyPixel/Llama-2-7B-bf16-sharded",
             trust_remote_code=True,
+            use_fast=False
         )
 
         set_seed(42)
@@ -52,8 +50,8 @@ async def fine_tune_openELM(job_id, base_model, dataset_id, new_model_name, hf_t
             output_dir=f"out_{run_id}",
             evaluation_strategy="steps",
             label_names=["labels"],
-            per_device_train_batch_size=8,
-            gradient_accumulation_steps=2,
+            per_device_train_batch_size=1,
+            gradient_accumulation_steps=8,
             save_steps=250,
             eval_steps=250,
             logging_steps=1,
@@ -62,7 +60,9 @@ async def fine_tune_openELM(job_id, base_model, dataset_id, new_model_name, hf_t
             lr_scheduler_type="constant",
             optim='paged_adamw_8bit',
             bf16=False,
+            report_to="tensorboard",
             gradient_checkpointing=True,
+            gradient_checkpointing_kwargs={"use_reentrant": False},
             group_by_length=True,
         )
 

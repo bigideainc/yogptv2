@@ -132,11 +132,11 @@ class Trainer(Module):
                     self.console.log(f"model is of type Llama: {model_id}")
                     model_repo_url, loss, accuracy = await fine_tune_llama(model_id, dataset_id, new_model_name, self.HF_ACCESS_TOKEN, job_id)
                 elif 'gpt' in model_detected:
-                    self.console.log(f"model is of type GPT: {model_id}")
-                    model_repo_url, loss, accuracy = await fine_tune_gpt(model_id, dataset_id, new_model_name, self.HF_ACCESS_TOKEN, job_id)
+                    self.console.log(f"model is  of type GPT:"+model_id)
+                    model_repo_url = await fine_tune_gpt(model_id, dataset_id, new_model_name, self.HF_ACCESS_TOKEN, job_id)
                 elif 'openelm' in model_detected:
-                    self.console.log(f"model is of type OpenELM: {model_id}")
-                    model_repo_url, loss, accuracy = await fine_tune_openELM(model_id, dataset_id, new_model_name, self.HF_ACCESS_TOKEN, job_id)
+                    self.console.log(f"model is  of type OpenELM:"+model_id)
+                    model_repo_url = await fine_tune_openELM(model_id, dataset_id, new_model_name, self.HF_ACCESS_TOKEN, job_id)
                 else:
                     self.console.log(f"Unsupported model ID: {model_id}. Skipping job.")
                     return  # Skip this job and proceed to the next one
