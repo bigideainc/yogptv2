@@ -10,6 +10,10 @@ from transformers import (AutoModelForCausalLM, AutoTokenizer,
                           TrainingArguments, set_seed)
 from trl import DataCollatorForCompletionOnlyLM, SFTTrainer, setup_chat_format
 
+from yogpt_subnet.miner.models.storage.hugging_face_store import \
+    HuggingFaceModelStore
+from yogpt_subnet.miner.utils.helpers import update_job_status
+
 # Append directories to sys.path for relative imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../', 'dataset')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../', 'model')))

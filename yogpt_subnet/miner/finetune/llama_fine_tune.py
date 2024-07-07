@@ -1,4 +1,3 @@
-import asyncio
 import os
 import shutil
 
@@ -99,35 +98,39 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
         peft_model.model_parallel = True
         peft_model.print_trainable_parameters()
 
-        # Set training parameters
-        training_params = TrainingArguments(
-            output_dir="training_output",
-            num_train_epochs=1,
-            per_device_train_batch_size=2,
-            gradient_accumulation_steps=1,
-            optim="paged_adamw_32bit",
-            save_steps=25,
-            logging_steps=25,
-            learning_rate=2e-5,
-            weight_decay=0.001,
-            fp16=False,
-            bf16=False,
-            max_grad_norm=0.3,
-            max_steps=-1,
-            warmup_ratio=0.03,
-            group_by_length=True,
-            lr_scheduler_type="constant",
-            report_to="tensorboard",
-            save_total_limit=1,  # Save only the last checkpoint
+        # Training arguments
+        training_args = TrainingArguments(
+            output_dir="./results",  
+            per_device_train_batch_size=4,  
+            per_device_eval_batch_size=8,   
+            gradient_accumulation_steps=2,  
+            learning_rate=2e-5,             
+            max_steps=100,                  
+            optim="paged_adamw_8bit",       
+            fp16=True,                      
+            run_name="llama-2-guanaco",     
+            report_to="none"
         )
 
-        # Set supervised fine-tuning parameters
-        trainer = SFTTrainer(
-            model=model,
-            train_dataset=dataset,
-            peft_config=peft_args,
-            dataset_text_field="text",
-            max_seq_length=None,
+        # Data collator
+        data_collator = DataCollatorForSeq2Seq(tokenizer, model=model)
+
+        # Define compute metrics
+        accuracy_metric = evaluate.load("accuracy")
+        def compute_metrics(eval_pred):
+            logits, labels = eval_pred
+            predictions = np.argmax(logits, axis=-1)
+            accuracy = accuracy_metric.compute(predictions=predictions, references=labels)
+            loss = np.mean(logits - labels)  # Dummy calculation for loss
+            return {"accuracy": accuracy["accuracy"], "loss": loss}
+
+        # Trainer setup
+        trainer = Trainer(
+            model=peft_model,
+            args=training_args,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            data_collator=data_collator,
             tokenizer=tokenizer,
             compute_metrics=compute_metrics,
         )
