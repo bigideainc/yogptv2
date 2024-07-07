@@ -144,7 +144,7 @@ class Trainer(Module):
                 self.console.log(f"Model uploaded to: {model_repo_url}")
 
             await self.update_job_status(job_id, 'completed')
-            await register_completed_job(job_id, model_repo_url, loss, accuracy)  # Pass the correct metrics
+            await register_completed_job(job_id, model_repo_url, loss, accuracy)
         except RuntimeError as e:
             self.console.log(f"Failed to process job {job_id}: {str(e)}")
         except Exception as e:
