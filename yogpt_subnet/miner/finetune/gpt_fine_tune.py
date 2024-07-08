@@ -12,7 +12,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../', '
 from datasets import load_dataset
 from yogpt_subnet.miner.utils.helpers import update_job_status #type:ignore
 from huggingface_hub import HfApi, Repository
-from transformers import (GPT2LMHeadModel, GPT2Tokenizer, Trainer,TrainingArguments)
+from transformers import (GPT2LMHeadModel, GPT2Tokenizer, Trainer,TrainingArguments,DataCollatorForLanguageModeling)
 
 new_model_name="gpt2_model_finetuned"
 
@@ -43,18 +43,25 @@ async def fine_tune_gpt(job_id, base_model, dataset_id, new_model_name, hf_token
             return tokenizer(examples["text"], truncation=True, padding="max_length", max_length=512)
         
         tokenized_dataset = dataset.map(tokenize_function, batched=True, remove_columns=dataset.column_names)
+        data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
+
         print("...... dataset loaded................")
         # Set training parameters
+        def compute_loss(model, inputs):
+            labels = inputs.pop("labels")  # Remove labels from inputs
+            outputs = model(**inputs, labels=labels)  # Forward pass with labels
+            return outputs.loss 
         training_args = TrainingArguments(
-             output_dir='./results',
-            num_train_epochs=3,
+            output_dir='./results',
+            num_train_epochs=1,
             per_device_train_batch_size=4,
             warmup_steps=500,
             weight_decay=0.01,
+            label_names=['input_ids', 'attention_mask'], 
             logging_dir='./logs',
             eval_steps=500,
             logging_steps=500,
-            save_steps=500,
+            fp16=False,
             report_to="tensorboard",
         )
 
@@ -63,7 +70,9 @@ async def fine_tune_gpt(job_id, base_model, dataset_id, new_model_name, hf_token
             model=model,
             args=training_args,
             train_dataset=tokenized_dataset,
-            tokenizer=tokenizer
+            tokenizer=tokenizer,
+            compute_metrics=compute_loss,
+            data_collator=data_collator
         )
 
         # Train model
