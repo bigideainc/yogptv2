@@ -15,7 +15,6 @@ prettytable
 numpy
 pandas
 requests
-bittensor
 scikit-learn
 tqdm
 huggingface_hub
@@ -36,3 +35,10 @@ typer
 uvicorn
 keylimiter
 pydantic-settings
+communex
+evaluate
+torch
+nltk
+matplotlib
+seaborn
+scikit-learn

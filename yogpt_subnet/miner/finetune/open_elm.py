@@ -6,11 +6,13 @@ import uuid
 
 import torch
 from datasets import load_dataset
-from yogpt_subnet.miner.utils.helpers import update_job_status #type:ignore
-from yogpt_subnet.miner.models.storage.hugging_face_store import HuggingFaceModelStore 
-from transformers import (AutoModelForCausalLM, AutoTokenizer,TrainingArguments, get_constant_schedule, set_seed)
+from transformers import (AutoModelForCausalLM, AutoTokenizer,
+                          TrainingArguments, set_seed)
 from trl import DataCollatorForCompletionOnlyLM, SFTTrainer, setup_chat_format
 
+from yogpt_subnet.miner.models.storage.hugging_face_store import \
+    HuggingFaceModelStore
+from yogpt_subnet.miner.utils.helpers import update_job_status
 
 # Append directories to sys.path for relative imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../', 'dataset')))
@@ -86,11 +88,21 @@ async def fine_tune_openELM(job_id, base_model, dataset_id, new_model_name, hf_t
         )
 
         # Train model
-        trainer.train()
+        train_result = trainer.train()
+
+        # Evaluate model
+        eval_result = trainer.evaluate()
+
+        # Collect metrics
+        train_loss = train_result.training_loss
+        eval_loss = eval_result['eval_loss']
+        accuracy = eval_result.get('eval_accuracy', None)
 
         # Create repository on Hugging Face and clone it locally
         store = HuggingFaceModelStore()
-        await store.upload_model(model, tokenizer, job_id)
+        repo_url = await store.upload_model(model, tokenizer, job_id)
+
+        return repo_url, eval_loss, accuracy
 
     except Exception as e:
         # Handle exceptions and update job status

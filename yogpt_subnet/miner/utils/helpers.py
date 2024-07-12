@@ -1,11 +1,11 @@
 import asyncio
-import requests
 import json
 import os
 import sys
 import time
 
 import aiohttp
+import requests
 import runpod
 from dotenv import load_dotenv
 
@@ -113,13 +113,15 @@ async def update_job_status(job_id, status):
             except Exception as e:
                 print(f"An error occurred: {e}")
                                 
-async def register_completed_job(job_id, huggingFaceRepoId):
+async def register_completed_job(job_id, huggingFaceRepoId, loss, accuracy):
     url = f"{BASE_URL}/complete-training"
     async with aiohttp.ClientSession() as session:
         headers = {'Authorization': f'Bearer {TOKEN}', 'Content-Type': 'application/json'}
         payload = {
             'jobId': job_id,
             'huggingFaceRepoId': huggingFaceRepoId,
+            'loss': loss,
+            "accuracy": accuracy,
             'minerId': MINER_ID
         }
         async with session.post(url, json=payload, headers=headers) as response:
