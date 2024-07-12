@@ -2,6 +2,7 @@ import asyncio
 import os
 import shutil
 import sys
+import time  # Import the time module
 import uuid
 
 import torch
@@ -18,9 +19,14 @@ from yogpt_subnet.miner.utils.helpers import update_job_status
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../', 'dataset')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../', 'model')))
 
+def format_time(elapsed):
+    return str(datetime.timedelta(seconds=int(round((elapsed)))))
 
 async def fine_tune_openELM(job_id, base_model, dataset_id, new_model_name, hf_token):
     try:
+        # Capture the start time
+        pipeline_start_time = time.time()
+
         # Load model
         model = AutoModelForCausalLM.from_pretrained(
             base_model,
@@ -102,7 +108,11 @@ async def fine_tune_openELM(job_id, base_model, dataset_id, new_model_name, hf_t
         store = HuggingFaceModelStore()
         repo_url = await store.upload_model(model, tokenizer, job_id)
 
-        return repo_url, eval_loss, accuracy
+        # Capture the end time
+        pipeline_end_time = time.time()
+        total_pipeline_time = format_time(pipeline_end_time - pipeline_start_time)
+
+        return repo_url, eval_loss, accuracy, total_pipeline_time
 
     except Exception as e:
         # Handle exceptions and update job status

@@ -48,6 +48,9 @@ async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id
     print(".......new model name ........" + new_model_name)
     print(".......dataset specified ........" + dataset_id)
 
+    # Capture the start time
+    pipeline_start_time = time.time()
+
     # Designate directories
     dataset_dir = os.path.join("data", dataset_id)
     os.makedirs(dataset_dir, exist_ok=True)
@@ -227,7 +230,11 @@ async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id
         repo.git_commit("Add fine-tuned model files")
         repo.git_push()
 
-        return repo_url, avg_val_loss, avg_val_accuracy
+        # Capture the end time
+        pipeline_end_time = time.time()
+        total_pipeline_time = format_time(pipeline_end_time - pipeline_start_time)
+
+        return repo_url, avg_val_loss, avg_val_accuracy, total_pipeline_time
 
     except Exception as e:
         await update_job_status(job_id, 'pending')

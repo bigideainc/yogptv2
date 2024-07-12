@@ -1,5 +1,6 @@
 import os
 import shutil
+import time
 
 import bitsandbytes as bnb
 import evaluate
@@ -14,12 +15,18 @@ from transformers import (AutoModelForCausalLM, AutoTokenizer,
 from yogpt_subnet.miner.utils.helpers import update_job_status
 
 
+def format_time(elapsed):
+    return str(datetime.timedelta(seconds=int(round((elapsed)))))
+
 async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_id):
     """Train a model with the given parameters and upload it to Hugging Face."""
     base_model = str(base_model)
-    print("------basemodel specified-----" + base_model)
-    print(".......new_model_name ........" + new_model_name)
+    print("------base model specified-----" + base_model)
+    print(".......new model name ........" + new_model_name)
     print(".......dataset specified ........" + dataset_id)
+
+    # Capture the start time
+    pipeline_start_time = time.time()
 
     # Designate directories
     dataset_dir = os.path.join("data", dataset_id)
@@ -164,7 +171,11 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
         repo.git_commit("Add fine-tuned model files")
         repo.git_push()
 
-        return repo_url, loss, accuracy
+        # Capture the end time
+        pipeline_end_time = time.time()
+        total_pipeline_time = format_time(pipeline_end_time - pipeline_start_time)
+
+        return repo_url, loss, accuracy, total_pipeline_time
 
     except Exception as e:
         await update_job_status(job_id, 'pending')

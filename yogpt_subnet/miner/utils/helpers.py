@@ -113,7 +113,7 @@ async def update_job_status(job_id, status):
             except Exception as e:
                 print(f"An error occurred: {e}")
                                 
-async def register_completed_job(job_id, huggingFaceRepoId, loss, accuracy):
+async def register_completed_job(job_id, huggingFaceRepoId, loss, accuracy, total_pipeline_time):
     url = f"{BASE_URL}/complete-training"
     async with aiohttp.ClientSession() as session:
         headers = {'Authorization': f'Bearer {TOKEN}', 'Content-Type': 'application/json'}
@@ -122,7 +122,8 @@ async def register_completed_job(job_id, huggingFaceRepoId, loss, accuracy):
             'huggingFaceRepoId': huggingFaceRepoId,
             'loss': loss,
             "accuracy": accuracy,
-            'minerId': MINER_ID
+            'minerId': MINER_ID,
+            'totalPipelineTime': total_pipeline_time
         }
         async with session.post(url, json=payload, headers=headers) as response:
             try:
@@ -134,7 +135,6 @@ async def register_completed_job(job_id, huggingFaceRepoId, loss, accuracy):
                 print(f"Failed to register completed job {job_id}: {err}")
             except Exception as e:
                 print(f"An error occurred: {e}")
-
 
 if __name__ == "__main__":
     asyncio.run(fetch_jobs())
