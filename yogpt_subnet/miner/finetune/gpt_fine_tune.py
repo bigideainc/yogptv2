@@ -1,6 +1,7 @@
+import datetime
 import os
+import random
 import shutil
-import sys
 import time
 
 import matplotlib.pyplot as plt
@@ -9,6 +10,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import torch
+from datasets import load_dataset
 from huggingface_hub import HfApi, Repository, create_repo, login
 from torch.utils.data import (DataLoader, Dataset, RandomSampler,
                               SequentialSampler, random_split)
@@ -39,47 +41,49 @@ class GPT2Dataset(Dataset):
 def format_time(elapsed):
     return str(datetime.timedelta(seconds=int(round((elapsed)))))
 
-async def fine_tune_gpt(job_id, base_model, dataset_id, new_model_name, hf_token):
-    """Fine-tunes a GPT-2 model and uploads it to Hugging Face Hub."""
-    # print(f"Transformer version: {transformers.__version__}")
-    start_time = time.time()
-    final_loss = None
-    # Designate directories
+async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id):
+    """Fine-tune GPT-2 model and upload it to Hugging Face."""
     base_model = str(base_model)
     print("------base model specified-----" + base_model)
     print(".......new model name ........" + new_model_name)
     print(".......dataset specified ........" + dataset_id)
-    
+
+    # Designate directories
     dataset_dir = os.path.join("data", dataset_id)
     os.makedirs(dataset_dir, exist_ok=True)
 
     try:
-        # Load dataset
-        df = pd.read_csv(dataset_id)
-        df.dropna(inplace=True)
-        bios = df['bio_main'].tolist()
+        # Login to Hugging Face
+        login(hf_token)
 
-        dataset = GPT2Dataset(bios, GPT2Tokenizer.from_pretrained(base_model), max_length=768)
+        # Load dataset from Hugging Face
+        dataset = load_dataset(dataset_id, split="train")
 
-        # Split into training and validation sets
-        train_size = int(0.9 * len(dataset))
-        val_size = len(dataset) - train_size
-        train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+        # Split dataset into training and validation sets (90% train, 10% validation)
+        split_dataset = dataset.train_test_split(test_size=0.1)
+        train_dataset = split_dataset['train']
+        eval_dataset = split_dataset['test']
 
+        texts = train_dataset['text']  # Adjust as needed based on the dataset structure
+
+        # Create custom dataset
+        dataset = GPT2Dataset(texts, GPT2Tokenizer.from_pretrained(base_model), max_length=768)
+
+        # DataLoader for training and validation
         batch_size = 2
-
         train_dataloader = DataLoader(train_dataset, sampler=RandomSampler(train_dataset), batch_size=batch_size)
-        validation_dataloader = DataLoader(val_dataset, sampler=SequentialSampler(val_dataset), batch_size=batch_size)
+        validation_dataloader = DataLoader(eval_dataset, sampler=SequentialSampler(eval_dataset), batch_size=batch_size)
 
-        # Initialize model
+        # Initialize model and tokenizer
         configuration = GPT2Config.from_pretrained(base_model, output_hidden_states=False)
         model = GPT2LMHeadModel.from_pretrained(base_model, config=configuration)
-        tokenizer = GPT2Tokenizer.from_pretrained(base_model, bos_token='', eos_token='', pad_token='')
+        tokenizer = GPT2Tokenizer.from_pretrained(base_model, bos_token='<|startoftext|>', eos_token='<|endoftext|>', pad_token='<|pad|>')
         model.resize_token_embeddings(len(tokenizer))
 
-        device = torch.device("cuda")
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model.to(device)
 
+        # Training parameters
         epochs = 5
         learning_rate = 5e-4
         warmup_steps = 1e2
@@ -213,18 +217,17 @@ async def fine_tune_gpt(job_id, base_model, dataset_id, new_model_name, hf_token
         tokenizer.save_pretrained(output_dir)
 
         api = HfApi()
-        repo_url = api.create_repo(repo_id=new_model_name, token=hf_token)
-        repo = Repository(local_dir=f"models/{new_model_name}", clone_from=repo_url, token=hf_token)
+        repo_url = api.create_repo(repo_id=job_id, token=hf_token)
+        repo = Repository(local_dir=f"models/{job_id}", clone_from=repo_url, token=hf_token)
 
-        # Save trained model locally in the cloned directory
-        trainer.save_model(repo.local_dir)
+        model_to_save.save_pretrained(repo.local_dir)
+        tokenizer.save_pretrained(repo.local_dir)
 
-        # Add all files to the git repository, commit, and push
         repo.git_add(pattern=".")
         repo.git_commit("Add fine-tuned model files")
         repo.git_push()
-        total_time = time.time() - start_time
-        return repo_url,total_time,final_loss
+
+        return repo_url, avg_val_loss, avg_val_accuracy
 
     except Exception as e:
         await update_job_status(job_id, 'pending')
@@ -233,14 +236,3 @@ async def fine_tune_gpt(job_id, base_model, dataset_id, new_model_name, hf_token
     finally:
         # Clean up the dataset directory
         shutil.rmtree(dataset_dir)
-
-# Example usage
-# import asyncio
-
-# job_id = "job1234"
-# base_model = "gpt2"
-# dataset_id = "wikitext-2-raw-v1"  # Example dataset configuration
-# new_model_name = "toby_gpt2"
-# hf_token = "your_hugging_face_token_here"
-
-# asyncio.run(fine_tune_gpt(job_id, base_model, dataset_id, new_model_name, hf_token))
