@@ -1,9 +1,7 @@
-import asyncio
 import os
 import shutil
 import sys
-
-import torch
+import time
 
 # Append directories to sys.path for relative imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../', 'dataset')))
@@ -19,7 +17,8 @@ new_model_name="gpt2_model_finetuned"
 async def fine_tune_gpt(job_id, base_model, dataset_id, new_model_name, hf_token):
     """Fine-tunes a GPT-2 model and uploads it to Hugging Face Hub."""
     # print(f"Transformer version: {transformers.__version__}")
-
+    start_time = time.time()
+    final_loss = None
     # Designate directories
     base_model = str(base_model)
     print("------basemodel specified-----" + base_model)
@@ -78,6 +77,7 @@ async def fine_tune_gpt(job_id, base_model, dataset_id, new_model_name, hf_token
         # Train model
         print(".......Training starting .......... ")
         trainer.train()
+        final_loss = trainer.state.log_history[-1].get('loss')
         print(".......Training ended .......... ")
         # Create repository on Hugging Face and clone it locally
         api = HfApi()
@@ -91,8 +91,8 @@ async def fine_tune_gpt(job_id, base_model, dataset_id, new_model_name, hf_token
         repo.git_add(pattern=".")
         repo.git_commit("Add fine-tuned model files")
         repo.git_push()
-
-        return repo_url
+        total_time = time.time() - start_time
+        return repo_url,total_time,final_loss
 
     except Exception as e:
         await update_job_status(job_id, 'pending')
