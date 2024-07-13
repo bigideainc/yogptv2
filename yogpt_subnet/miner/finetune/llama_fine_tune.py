@@ -1,6 +1,7 @@
 import os
 import shutil
 import time
+import datetime
 
 import bitsandbytes as bnb
 import evaluate
@@ -9,15 +10,13 @@ import torch
 from datasets import load_dataset
 from huggingface_hub import HfApi, Repository, create_repo, login, whoami
 from peft import LoraConfig, TaskType, get_peft_model
-from transformers import (AutoModelForCausalLM, AutoTokenizer,
-                          DataCollatorForSeq2Seq, Trainer, TrainingArguments)
+from transformers import (AutoModelForCausalLM, AutoTokenizer,DataCollatorForSeq2Seq, Trainer, TrainingArguments,AutoModelForCausalLM,BitsAndBytesConfig)
 
 from yogpt_subnet.miner.utils.helpers import update_job_status
 
 
 def format_time(elapsed):
     return str(datetime.timedelta(seconds=int(round((elapsed)))))
-
 async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_id):
     """Train a model with the given parameters and upload it to Hugging Face."""
     base_model = str(base_model)
@@ -37,7 +36,7 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
         login(hf_token)
 
         # Load dataset
-        dataset = load_dataset(dataset_id, split="train")
+        dataset = load_dataset(dataset_id, split="train", use_auth_token=hf_token)
 
         # Split dataset into training and validation sets (90% train, 10% validation)
         split_dataset = dataset.train_test_split(test_size=0.1)

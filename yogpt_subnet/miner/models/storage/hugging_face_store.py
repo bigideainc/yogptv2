@@ -15,7 +15,7 @@ class HuggingFaceModelStore:
             raise ValueError("No Hugging Face access token found in environment. Make sure HF_ACCESS_TOKEN is set.")
         return token
 
-    async def upload_model(self, model: PreTrainedModel, tokenizer: PreTrainedTokenizerFast, job_id: str):
+    def upload_model(self, model: PreTrainedModel, tokenizer: PreTrainedTokenizerFast, job_id: str):
         """Uploads a trained model to Hugging Face, creating a new repository if it does not exist."""
         token = self.assert_access_token_exists()
         repo_name = f"job_{job_id}"  # Dynamic repository name based on job ID
@@ -31,16 +31,11 @@ class HuggingFaceModelStore:
             tokenizer.save_pretrained(repo_name)
 
             # Upload to Hugging Face Hub
-            await model.push_to_hub(repo_name, use_auth_token=token)
-            await tokenizer.push_to_hub(repo_name, use_auth_token=token)
+            model.push_to_hub(repo_name, use_auth_token=token)
+            tokenizer.push_to_hub(repo_name, use_auth_token=token)
 
             print(f"Successfully uploaded {repo_name} to Hugging Face Hub.")
         except Exception as e:
             print(f"Failed to create or upload to repository {repo_name}: {str(e)}")
 
-# Example usage
-# async def upload_example():
-#     store = HuggingFaceModelStore()
-#     model, tokenizer = ... # Your code to load or define the model and tokenizer
-#     job_id = "12345"
-#     await store.upload_model(model, tokenizer, job_id)
+
