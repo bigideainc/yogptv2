@@ -107,11 +107,11 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
         # Training arguments
         training_args = TrainingArguments(
             output_dir="./results",  
-            per_device_train_batch_size=32,  
+            per_device_train_batch_size=16,  
             per_device_eval_batch_size=8,   
             gradient_accumulation_steps=2,  
             learning_rate=2e-5,             
-            max_steps=100,                  
+            max_steps=100,                 
             optim="paged_adamw_8bit",       
             fp16=True,                      
             run_name="llama-2-guanaco",     
@@ -133,6 +133,7 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
         # Trainer setup
         trainer = Trainer(
             model=peft_model,
+            dataset_text_field="text",
             args=training_args,
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
@@ -153,7 +154,7 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
 
         # Evaluate the model on the validation set
         eval_metrics = trainer.evaluate()
-        accuracy = eval_metrics.get("eval_accuracy")
+        accuracy = 0
         loss = eval_metrics.get("eval_loss")
 
         # Create repository on Hugging Face and clone it locally
