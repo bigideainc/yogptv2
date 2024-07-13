@@ -81,6 +81,7 @@ async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id
         configuration = GPT2Config.from_pretrained(base_model, output_hidden_states=False)
         model = GPT2LMHeadModel.from_pretrained(base_model, config=configuration)
         tokenizer = GPT2Tokenizer.from_pretrained(base_model, bos_token='<|startoftext|>', eos_token='<|endoftext|>', pad_token='<|pad|>')
+        tokenizer.pad_token = tokenizer.eos_token
         model.resize_token_embeddings(len(tokenizer))
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
