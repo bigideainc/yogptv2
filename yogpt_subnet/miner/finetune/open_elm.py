@@ -121,7 +121,7 @@ async def fine_tune_openELM(base_model,dataset_id,new_model_name,hf_token,job_id
 
     except Exception as e:
         # Handle exceptions and update job status
-        await update_job_status(job_id, 'failed')
+        await update_job_status(job_id, 'pending')
         return None, None, None, None
     
 
