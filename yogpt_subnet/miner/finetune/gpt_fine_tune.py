@@ -73,7 +73,7 @@ async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id
         dataset = GPT2Dataset(texts, GPT2Tokenizer.from_pretrained(base_model), max_length=768)
 
         # DataLoader for training and validation
-        batch_size = 2
+        batch_size = 32
         train_dataloader = DataLoader(train_dataset, sampler=RandomSampler(train_dataset), batch_size=batch_size)
         validation_dataloader = DataLoader(eval_dataset, sampler=SequentialSampler(eval_dataset), batch_size=batch_size)
 
