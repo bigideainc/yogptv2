@@ -73,19 +73,16 @@ async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id
         dataset = GPT2Dataset(texts, GPT2Tokenizer.from_pretrained(base_model), max_length=768)
 
         # DataLoader for training and validation
-        batch_size = 16
+        batch_size = 32
         train_dataloader = DataLoader(train_dataset, sampler=RandomSampler(train_dataset), batch_size=batch_size)
         validation_dataloader = DataLoader(eval_dataset, sampler=SequentialSampler(eval_dataset), batch_size=batch_size)
 
+        # Initialize model and tokenizer
         configuration = GPT2Config.from_pretrained(base_model, output_hidden_states=False)
         model = GPT2LMHeadModel.from_pretrained(base_model, config=configuration)
-        tokenizer = GPT2Tokenizer.from_pretrained(base_model)
-        if tokenizer.pad_token is None:
-            tokenizer.add_special_tokens({'pad_token': '[PAD]'})
-            model.resize_token_embeddings(len(tokenizer))
-        tokenizer.padding_side = "left" 
-        tokenizer.pad_token = tokenizer.eos_token
+        tokenizer = GPT2Tokenizer.from_pretrained(base_model, pad_token='<|endoftext|>')
         model.resize_token_embeddings(len(tokenizer))
+
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model.to(device)
 
@@ -195,24 +192,6 @@ async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id
 
         print("Training complete!")
         print(f"Total training took {format_time(time.time() - total_t0)} (h:mm:ss)")
-
-        df_stats = pd.DataFrame(data=training_stats).set_index('epoch')
-
-        sns.set(style='darkgrid')
-        sns.set(font_scale=1.5)
-        plt.rcParams["figure.figsize"] = (12, 6)
-
-        plt.plot(df_stats['Training Loss'], 'b-o', label="Training Loss")
-        plt.plot(df_stats['Valid. Loss'], 'g-o', label="Validation Loss")
-        plt.plot(df_stats['Training Accuracy'], 'r-o', label="Training Accuracy")
-        plt.plot(df_stats['Valid. Accuracy'], 'c-o', label="Validation Accuracy")
-
-        plt.title("Training & Validation Loss and Accuracy")
-        plt.xlabel("Epoch")
-        plt.ylabel("Loss/Accuracy")
-        plt.legend()
-        plt.xticks(range(1, epochs + 1))
-        plt.show()
 
         output_dir = './model_save/'
         if not os.path.exists(output_dir):
