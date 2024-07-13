@@ -11,7 +11,7 @@ from datasets import load_dataset
 from huggingface_hub import HfApi, Repository, create_repo, login, whoami
 from peft import LoraConfig, TaskType, get_peft_model
 from transformers import (AutoModelForCausalLM, AutoTokenizer,DataCollatorForSeq2Seq,TrainingArguments,AutoModelForCausalLM,BitsAndBytesConfig)
-from trl import SFTTrainer
+from trl import SFTTrainer,SFTConfig
 from yogpt_subnet.miner.utils.helpers import update_job_status
 
 
@@ -131,10 +131,12 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
             return {"accuracy": accuracy["accuracy"], "loss": loss}
 
         # Trainer setup
-        trainer = SFTTrainer(
+        trainer = SFTConfig(
+            max_seq_length=None,
             model=peft_model,
             dataset_text_field="text",
             args=training_args,
+            peft_config=peft_config,
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
             data_collator=data_collator,
