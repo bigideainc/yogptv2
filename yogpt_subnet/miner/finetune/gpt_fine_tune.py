@@ -73,17 +73,19 @@ async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id
         dataset = GPT2Dataset(texts, GPT2Tokenizer.from_pretrained(base_model), max_length=768)
 
         # DataLoader for training and validation
-        batch_size = 32
+        batch_size = 16
         train_dataloader = DataLoader(train_dataset, sampler=RandomSampler(train_dataset), batch_size=batch_size)
         validation_dataloader = DataLoader(eval_dataset, sampler=SequentialSampler(eval_dataset), batch_size=batch_size)
 
-        # Initialize model and tokenizer
         configuration = GPT2Config.from_pretrained(base_model, output_hidden_states=False)
         model = GPT2LMHeadModel.from_pretrained(base_model, config=configuration)
-        tokenizer = GPT2Tokenizer.from_pretrained(base_model, bos_token='<|startoftext|>', eos_token='<|endoftext|>', pad_token='<|pad|>')
+        tokenizer = GPT2Tokenizer.from_pretrained(base_model)
+        if tokenizer.pad_token is None:
+            tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+            model.resize_token_embeddings(len(tokenizer))
+        tokenizer.padding_side = "left" 
         tokenizer.pad_token = tokenizer.eos_token
         model.resize_token_embeddings(len(tokenizer))
-
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model.to(device)
 
