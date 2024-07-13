@@ -24,17 +24,16 @@ def format_time(elapsed):
 
 async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id):
     """Fine-tune GPT-2 model and upload it to Hugging Face."""
+    print("Starting fine-tuning process...")
     base_model = str(base_model)
-    print("------base model specified-----" + base_model)
-    print(".......new model name ........" + new_model_name)
-    print(".......dataset specified ........" + dataset_id)
+    print("*------base model specified-----*" + base_model)
+    print("*.......new model name ........*" + new_model_name)
+    print("*.......dataset specified ........*" + dataset_id)
 
-    # Capture the start time
     pipeline_start_time = time.time()
-
-    # Designate directories
     dataset_dir = os.path.join("data", dataset_id)
     os.makedirs(dataset_dir, exist_ok=True)
+
 
     try:
         # Login to Hugging Face
@@ -52,6 +51,7 @@ async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id
         tokenized_dataset = dataset.map(tokenize_function, batched=True, remove_columns=dataset.column_names) 
 
         data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
+
         def compute_loss(model, inputs):
             labels = inputs.pop("labels") 
             outputs = model(**inputs, labels=labels)  
@@ -60,17 +60,19 @@ async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id
         training_args = TrainingArguments(
             output_dir='./results',
             num_train_epochs=1,
-            per_device_train_batch_size=16,
+            per_device_train_batch_size=8,
             warmup_steps=500,
             weight_decay=0.01,
             label_names=['input_ids', 'attention_mask'],
             logging_dir='./logs',
             eval_steps=500,
             logging_steps=500,
+            report_to="tensorboard",
             run_name="gpt2_model_running",
             fp16=False,
 
         )
+        print("Setting up trainer........")
         trainer = Trainer(
             model=model,
             args=training_args,
@@ -79,6 +81,9 @@ async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id
             compute_metrics=compute_loss,
             data_collator=data_collator
         )
+        print("Trainer set up successfully.")
+
+        print("Starting training...")
         
         train_result = trainer.train()
         train_loss = train_result.training_loss
@@ -103,5 +108,6 @@ async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id
         return None, None, None, None
 
     finally:
-        # Clean up the dataset directory
+        print("Cleaning up dataset directory...")
         shutil.rmtree(dataset_dir)
+        print("Cleanup completed.")
