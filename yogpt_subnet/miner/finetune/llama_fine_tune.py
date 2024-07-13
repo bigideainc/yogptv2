@@ -131,7 +131,7 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
             return {"accuracy": accuracy["accuracy"], "loss": loss}
 
         # Trainer setup
-        trainer = SFTConfig(
+        trainer = SFTTrainer(
             max_seq_length=None,
             model=peft_model,
             dataset_text_field="text",
