@@ -57,6 +57,7 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
             base_model, use_auth_token=hf_token, trust_remote_code=True
         )
         tokenizer.pad_token = tokenizer.eos_token
+        tokenizer.padding_side = "right"
 
         # Initialize the model
         model = AutoModelForCausalLM.from_pretrained(
@@ -139,7 +140,6 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
             peft_config=peft_config,
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
-            data_collator=data_collator,
             tokenizer=tokenizer,
             compute_metrics=compute_metrics,
         )
