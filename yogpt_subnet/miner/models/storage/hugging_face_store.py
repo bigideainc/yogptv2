@@ -35,6 +35,7 @@ class HuggingFaceModelStore:
             tokenizer.push_to_hub(repo_name, use_auth_token=token)
 
             print(f"Successfully uploaded {repo_name} to Hugging Face Hub.")
+            return repo_url
         except Exception as e:
             print(f"Failed to create or upload to repository {repo_name}: {str(e)}")
 

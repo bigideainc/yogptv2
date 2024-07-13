@@ -103,7 +103,7 @@ async def fine_tune_openELM(base_model,dataset_id,new_model_name,hf_token,job_id
         # Collect metrics
         train_loss = train_result.training_loss
         eval_loss = eval_result['eval_loss']
-        accuracy = eval_result.get('eval_accuracy', None)
+        accuracy = 0
 
         # Create repository on Hugging Face and clone it locally
         store = HuggingFaceModelStore()
