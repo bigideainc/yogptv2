@@ -144,11 +144,15 @@ class Trainer(Module):
                     self.console.log(f"Unsupported model ID: {model_id}. Skipping job.")
                     return  # Skip this job and proceed to the next one
 
-                self.console.log(f"Model uploaded to: {model_repo_url}")
-                self.console.log(f"Total pipeline time: {total_pipeline_time}")
+                if model_repo_url is not None:
+                    self.console.log(f"Model uploaded to: {model_repo_url}")
+                    self.console.log(f"Total pipeline time: {total_pipeline_time}")
 
-                await self.update_job_status(job_id, 'completed')
-                await register_completed_job(job_id, model_repo_url, loss, accuracy, total_pipeline_time)
+                    await self.update_job_status(job_id, 'completed')
+                    await register_completed_job(job_id, model_repo_url, loss, accuracy, total_pipeline_time)
+                else:
+                    self.console.log(f"Failed to process job {job_id}: No model URL returned")
+                    await self.update_job_status(job_id, 'failed')
 
         except RuntimeError as e:
             self.console.log(f"Failed to process job {job_id}: {str(e)}")

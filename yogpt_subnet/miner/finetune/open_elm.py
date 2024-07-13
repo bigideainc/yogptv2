@@ -107,18 +107,23 @@ async def fine_tune_openELM(base_model,dataset_id,new_model_name,hf_token,job_id
 
         # Create repository on Hugging Face and clone it locally
         store = HuggingFaceModelStore()
-        repo_url = await store.upload_model(model, tokenizer, job_id)
+        repo_url = store.upload_model(model, tokenizer, job_id)
 
         # Capture the end time
         pipeline_end_time = time.time()
         total_pipeline_time = format_time(pipeline_end_time - pipeline_start_time)
-
+        print("........ model details...........")
+        print(repo_url)
+        print(eval_loss)
+        print(accuracy)
+        print(total_pipeline_time)
         return repo_url, eval_loss, accuracy, total_pipeline_time
 
     except Exception as e:
         # Handle exceptions and update job status
         await update_job_status(job_id, 'failed')
-        raise RuntimeError(f"Training pipeline encountered an error: {str(e)}")
+        return None, None, None, None
+    
 
     finally:
         # Clean up any resources if needed
