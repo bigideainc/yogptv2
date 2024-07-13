@@ -39,7 +39,7 @@ async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id
     try:
         # Login to Hugging Face
         login(hf_token)
-        dataset = load_dataset(dataset_id, split="train[:10%]", cache_dir=dataset_dir,trust_remote_code=True)
+        dataset = load_dataset(dataset_id, split="train", cache_dir=dataset_dir,trust_remote_code=True)
 
         # Load GPT-2 tokenizer
         tokenizer = GPT2Tokenizer.from_pretrained(base_model, pad_token="<|endoftext|>")
@@ -79,7 +79,7 @@ async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id
             compute_metrics=compute_loss,
             data_collator=data_collator
         )
-        trainer.train()
+        
         train_result = trainer.train()
         train_loss = train_result.training_loss
         accuracy = 0
