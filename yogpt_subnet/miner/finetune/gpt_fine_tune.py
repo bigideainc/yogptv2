@@ -60,7 +60,7 @@ async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id
         login(hf_token)
 
         # Load dataset from Hugging Face
-        dataset = load_dataset(dataset_id, split="train")
+        dataset = load_dataset(dataset_id, split="train",use_auth_token=hf_token)
 
         # Split dataset into training and validation sets (90% train, 10% validation)
         split_dataset = dataset.train_test_split(test_size=0.1)

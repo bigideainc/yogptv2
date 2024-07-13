@@ -53,7 +53,7 @@ async def fine_tune_openELM(job_id, base_model, dataset_id, new_model_name, hf_t
             tokenizer.pad_token = tokenizer.unk_token
 
         # Load dataset
-        dataset = load_dataset(dataset_id)
+        dataset = load_dataset(dataset_id, use_auth_token=hf_token)
 
         # Training arguments
         training_arguments = TrainingArguments(
