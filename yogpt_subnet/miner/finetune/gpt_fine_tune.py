@@ -79,6 +79,7 @@ async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id
             compute_metrics=compute_loss,
             data_collator=data_collator
         )
+        trainer.train()
         train_result = trainer.train()
         train_loss = train_result.training_loss
         accuracy = 0
