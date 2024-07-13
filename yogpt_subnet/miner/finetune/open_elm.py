@@ -60,7 +60,7 @@ async def fine_tune_openELM(base_model,dataset_id,new_model_name,hf_token,job_id
             output_dir=f"out_{run_id}",
             evaluation_strategy="steps",
             label_names=["labels"],
-            per_device_train_batch_size=32,
+            per_device_train_batch_size=16,
             gradient_accumulation_steps=8,
             save_steps=250,
             eval_steps=250,
