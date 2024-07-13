@@ -22,11 +22,10 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../', '
 def format_time(elapsed):
     return str(datetime.timedelta(seconds=int(round((elapsed)))))
 
-async def fine_tune_openELM(job_id, base_model, dataset_id, new_model_name, hf_token):
+async def fine_tune_openELM(base_model,dataset_id,new_model_name,hf_token,job_id):
     try:
         # Capture the start time
         pipeline_start_time = time.time()
-
         # Load model
         model = AutoModelForCausalLM.from_pretrained(
             base_model,
@@ -40,19 +39,20 @@ async def fine_tune_openELM(job_id, base_model, dataset_id, new_model_name, hf_t
         tokenizer = AutoTokenizer.from_pretrained(
             "TinyPixel/Llama-2-7B-bf16-sharded",
             trust_remote_code=True,
-            use_fast=False
+            use_fast=False,
+            token=hf_token
         )
 
         set_seed(42)
         lr = 5e-5
-        run_id = f"OpenELM-1_IB_LR-{lr}_OA_{str(uuid.uuid4())}"
+        run_id = f"OpenELM-1_IB_LR-{lr}_OA_{str(uuid.uuid4())}"                                                                                                                                                                                                                                                                                                                                         
 
         # Setup chat format
         model, tokenizer = setup_chat_format(model, tokenizer)
         if tokenizer.pad_token in [None, tokenizer.eos_token]:
             tokenizer.pad_token = tokenizer.unk_token
 
-        # Load dataset
+        # Load dataset                                                                                                                                                                                                                                                                                                                                                                  
         dataset = load_dataset(dataset_id, use_auth_token=hf_token)
 
         # Training arguments
