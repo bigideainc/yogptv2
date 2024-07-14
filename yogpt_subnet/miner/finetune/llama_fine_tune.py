@@ -108,8 +108,8 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
         # Training arguments
         training_args = TrainingArguments(
             output_dir="./results",  
-            per_device_train_batch_size=4,  
-            per_device_eval_batch_size=4,   
+            per_device_train_batch_size=2,  
+            per_device_eval_batch_size=2,   
             gradient_accumulation_steps=2,  
             learning_rate=2e-5,             
             max_steps=100,                 

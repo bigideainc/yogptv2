@@ -39,12 +39,13 @@ class ModelRewardChecker(Module):
     def calculate_reward(self, job_data):
         model_tuned = job_data.get('model_tuned')
         loss = job_data.get('loss')
-        completed_at = job_data.get('completedAt')
+        duration_str = job_data.get('totalPipelineTime')
+        model_created = job_data.get('huggingFaceRepoId')
         
-        # For demonstration, we'll create a startedAt 24 hours before completedAt
-        # In a real scenario, you'd use the actual startedAt from job_data
-        started_at = completed_at - timedelta(hours=24)
-        
+        # Check if huggingFaceRepoId is not empty and contains 'huggingface'
+        if not model_created or 'huggingface' not in model_created.lower():
+            return 0, "No valid Hugging Face model created"
+
         if model_tuned not in self.model_thresholds:
             return 0, "Model not found in thresholds"
 
@@ -53,8 +54,18 @@ class ModelRewardChecker(Module):
         training_per_hour = model_info['training_per_hour']
         min_time, max_time = model_info['fine_tuning_time']
 
-        # Calculate training duration in hours
-        duration = (completed_at - started_at).total_seconds() / 3600
+        try:
+            duration_parts = duration_str.split(':')
+            if len(duration_parts) == 3:  # HH:MM:SS format
+                hours, minutes, seconds = map(int, duration_parts)
+                duration = hours + minutes / 60 + seconds / 3600
+            elif len(duration_parts) == 2:  # HH:MM format
+                hours, minutes = map(int, duration_parts)
+                duration = hours + minutes / 60
+            else:
+                return 0, f"Invalid duration format: {duration_str}"
+        except ValueError:
+            return 0, f"Unable to parse duration: {duration_str}"
 
         if loss > threshold:
             return 0, "Loss exceeds threshold"
@@ -65,7 +76,6 @@ class ModelRewardChecker(Module):
         if duration > max_time:
             return 0, f"Training took too long. Expected maximum {max_time} hours, but took {duration:.2f} hours"
 
-        # Calculate reward based on actual training duration
         reward = training_per_hour * duration
         return reward, f"Reward granted for {duration:.2f} hours of training"
 
