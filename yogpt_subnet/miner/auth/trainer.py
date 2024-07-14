@@ -23,7 +23,7 @@ from yogpt_subnet.miner.utils.helpers import (
 from yogpt_subnet.miner.finetune.llama_fine_tune import fine_tune_llama
 from yogpt_subnet.miner.finetune.gpt_fine_tune import fine_tune_gpt
 from yogpt_subnet.miner.finetune.open_elm import fine_tune_openELM
-
+miner_id
 class Config:
     def __init__(self):
         load_dotenv()
@@ -137,7 +137,7 @@ class Trainer(Module):
         self.console.log("[bold red]Interrupted. Exiting...[/bold red]")
         sys.exit(0)
 
-    async def run(self):
+    async def main(self):
         self.display_welcome_message()
 
         while True:
