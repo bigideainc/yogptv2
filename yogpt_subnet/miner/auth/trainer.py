@@ -23,7 +23,6 @@ from yogpt_subnet.miner.utils.helpers import (
 from yogpt_subnet.miner.finetune.llama_fine_tune import fine_tune_llama
 from yogpt_subnet.miner.finetune.gpt_fine_tune import fine_tune_gpt
 from yogpt_subnet.miner.finetune.open_elm import fine_tune_openELM
-miner_id
 class Config:
     def __init__(self):
         load_dotenv()
