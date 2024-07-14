@@ -58,18 +58,19 @@ class Trainer(Module):
         self.console.print(Panel(Text("Welcome to YOGPT Miner System!", justify="center"), style="bold green"))
 
     def get_user_inputs(self):
-        self.BASE_URL = input("Enter the base URL: ")
-        self.HF_ACCESS_TOKEN = input("Enter your Hugging Face access token: ")
+        # self.BASE_URL = input("Enter the base URL: ")
+        # self.HF_ACCESS_TOKEN = input("Enter your Hugging Face access token: ")
         username = input("Enter your username: ")
         password = input("Enter your password: ")
-        run_on_runpod = input("Run on RunPod? (yes/no): ").lower() == 'yes'
+        # run_on_runpod = input("Run on RunPod? (yes/no): ").lower() == 'yes'
         
-        if run_on_runpod:
-            runpod_api_key = input("Enter your RunPod API key: ")
-        else:
-            runpod_api_key = None
+        # if run_on_runpod:
+            # runpod_api_key = input("Enter your RunPod API key: ")
+        # else:
+            # runpod_api_key = None
 
-        return username, password, run_on_runpod, runpod_api_key
+        return username, password
+        # return username, password, run_on_runpod, runpod_api_key
 
     @endpoint
     async def fetch_jobs(self):
