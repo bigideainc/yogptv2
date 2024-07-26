@@ -10,9 +10,10 @@ asyncio
 datasets
 packaging
 python-dotenv
-halo
+trl
 prettytable
-numpy
+loguru
+GPUtil
 pandas
 requests
 scikit-learn
@@ -28,14 +29,9 @@ accelerate
 bitsandbytes
 sentence-transformers
 tokenizers
-trl
 peft
-communex
-typer
-uvicorn
 keylimiter
 pydantic-settings
-communex
 evaluate
 torch
 nltk
