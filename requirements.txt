@@ -12,7 +12,8 @@ packaging
 python-dotenv
 halo
 prettytable
-numpy
+loguru
+GPUtil
 pandas
 requests
 scikit-learn
@@ -28,14 +29,9 @@ accelerate
 bitsandbytes
 sentence-transformers
 tokenizers
-trl
 peft
-communex
-typer
-uvicorn
 keylimiter
 pydantic-settings
-communex
 evaluate
 torch
 nltk
