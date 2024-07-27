@@ -31,7 +31,7 @@ async def fine_tune_openELM(base_model, dataset_id, new_model_name, hf_token, jo
     try:
         # Set the WANDB API key
         os.environ["WANDB_API_KEY"] = "efa7d98857a922cbe11e78fa1ac22b62a414fbf3"
-        t6r
+
         # Capture the start time
         pipeline_start_time = time.time()
 
@@ -145,4 +145,5 @@ async def fine_tune_openELM(base_model, dataset_id, new_model_name, hf_token, jo
 
     finally:
         # Clean up any resources if needed
-        pass  # No specific cleanup needed in this example
+        if 'repo_url' not in locals():
+            await update_job_status(job_id, 'pending')

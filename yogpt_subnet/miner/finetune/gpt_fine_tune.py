@@ -126,6 +126,13 @@ async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id
         return None, None, None, None
 
     finally:
-        print("Cleaning up dataset directory...")
-        shutil.rmtree(dataset_dir)
-        print("Cleanup completed.")
+        try:
+            print("Cleaning up dataset directory...")
+            shutil.rmtree(dataset_dir)
+            print("Cleanup completed.")
+        except Exception as e:
+            print(f"Error during cleanup: {str(e)}")
+
+        # Ensure the job status is updated to pending if the model was not saved to wandb
+        if 'repo_url' not in locals():
+            await update_job_status(job_id, 'pending')

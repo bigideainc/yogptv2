@@ -37,9 +37,9 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
     os.makedirs(dataset_dir, exist_ok=True)
 
     try:
-
         # Set the WANDB API key
         os.environ["WANDB_API_KEY"] = "efa7d98857a922cbe11e78fa1ac22b62a414fbf3"
+        
         # Login to Hugging Face
         login(hf_token)
 
@@ -169,7 +169,7 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
             eval_metrics = trainer.evaluate()
             accuracy = 0
             loss = eval_metrics.get("eval_loss")
-        
+
         except Exception as e:
             await update_job_status(job_id, 'pending')
             raise RuntimeError(f"Training failed: {str(e)}")
@@ -200,4 +200,11 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
 
     finally:
         # Clean up the dataset directory
-        shutil.rmtree(dataset_dir)
+        try:
+            shutil.rmtree(dataset_dir)
+        except Exception as e:
+            print(f"Error during cleanup: {str(e)}")
+
+        # Ensure the job status is updated to pending if the model was not saved to wandb
+        if 'repo_url' not in locals():
+            await update_job_status(job_id, 'pending')
