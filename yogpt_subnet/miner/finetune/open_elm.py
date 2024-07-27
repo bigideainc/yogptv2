@@ -1,12 +1,13 @@
 import asyncio
+import datetime
 import os
 import shutil
 import sys
-import time  # Import the time module
+import time
 import uuid
-import datetime
 
 import torch
+import wandb
 from datasets import load_dataset
 from transformers import (AutoModelForCausalLM, AutoTokenizer,
                           TrainingArguments, set_seed)
@@ -16,6 +17,9 @@ from yogpt_subnet.miner.models.storage.hugging_face_store import \
     HuggingFaceModelStore
 from yogpt_subnet.miner.utils.helpers import update_job_status
 
+# Set the WANDB API key
+os.environ["WANDB_API_KEY"] = "efa7d98857a922cbe11e78fa1ac22b62a414fbf3"
+
 # Append directories to sys.path for relative imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../', 'dataset')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../', 'model')))
@@ -23,10 +27,20 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../', '
 def format_time(elapsed):
     return str(datetime.timedelta(seconds=int(round((elapsed)))))
 
-async def fine_tune_openELM(base_model,dataset_id,new_model_name,hf_token,job_id):
+async def fine_tune_openELM(base_model, dataset_id, new_model_name, hf_token, job_id):
     try:
+        # Set the WANDB API key
+        os.environ["WANDB_API_KEY"] = "efa7d98857a922cbe11e78fa1ac22b62a414fbf3"
+        t6r
         # Capture the start time
         pipeline_start_time = time.time()
+
+        # Initialize wandb
+        wandb.init(project=job_id, entity="ai-research-lab", config={
+            "base_model": base_model,
+            "dataset_id": dataset_id,
+        })
+
         # Load model
         model = AutoModelForCausalLM.from_pretrained(
             base_model,
@@ -46,14 +60,14 @@ async def fine_tune_openELM(base_model,dataset_id,new_model_name,hf_token,job_id
 
         set_seed(42)
         lr = 5e-5
-        run_id = f"OpenELM-1_IB_LR-{lr}_OA_{str(uuid.uuid4())}"                                                                                                                                                                                                                                                                                                                                         
+        run_id = f"OpenELM-1_IB_LR-{lr}_OA_{str(uuid.uuid4())}"
 
         # Setup chat format
         model, tokenizer = setup_chat_format(model, tokenizer)
         if tokenizer.pad_token in [None, tokenizer.eos_token]:
             tokenizer.pad_token = tokenizer.unk_token
 
-        # Load dataset                                                                                                                                                                                                                                                                                                                                                                  
+        # Load dataset
         dataset = load_dataset(dataset_id, use_auth_token=hf_token)
 
         # Training arguments
@@ -71,7 +85,7 @@ async def fine_tune_openELM(base_model,dataset_id,new_model_name,hf_token,job_id
             lr_scheduler_type="constant",
             optim='paged_adamw_8bit',
             bf16=False,
-            report_to="tensorboard",
+            report_to="wandb",
             gradient_checkpointing=True,
             gradient_checkpointing_kwargs={"use_reentrant": False},
             group_by_length=True,
@@ -95,15 +109,20 @@ async def fine_tune_openELM(base_model,dataset_id,new_model_name,hf_token,job_id
         )
 
         # Train model
-        train_result = trainer.train()
+        try:
+            train_result = trainer.train()
 
-        # Evaluate model
-        eval_result = trainer.evaluate()
+            # Evaluate model
+            eval_result = trainer.evaluate()
 
-        # Collect metrics
-        train_loss = train_result.training_loss
-        eval_loss = eval_result['eval_loss']
-        accuracy = 0
+            # Collect metrics
+            train_loss = train_result.training_loss
+            eval_loss = eval_result['eval_loss']
+            accuracy = 0
+
+        except Exception as e:
+            await update_job_status(job_id, 'pending')
+            raise RuntimeError(f"Training failed: {str(e)}")
 
         # Create repository on Hugging Face and clone it locally
         store = HuggingFaceModelStore()
@@ -123,7 +142,6 @@ async def fine_tune_openELM(base_model,dataset_id,new_model_name,hf_token,job_id
         # Handle exceptions and update job status
         await update_job_status(job_id, 'pending')
         return None, None, None, None
-    
 
     finally:
         # Clean up any resources if needed

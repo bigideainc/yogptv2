@@ -1,22 +1,27 @@
+import datetime
 import os
 import shutil
 import time
-import datetime
 
 import bitsandbytes as bnb
 import evaluate
 import numpy as np
 import torch
+import wandb
 from datasets import load_dataset
 from huggingface_hub import HfApi, Repository, create_repo, login, whoami
 from peft import LoraConfig, TaskType, get_peft_model
-from transformers import (AutoModelForCausalLM, AutoTokenizer,DataCollatorForSeq2Seq,TrainingArguments,AutoModelForCausalLM,BitsAndBytesConfig)
-from trl import SFTTrainer,SFTConfig
+from transformers import (AutoModelForCausalLM, AutoTokenizer,
+                          BitsAndBytesConfig, DataCollatorForSeq2Seq,
+                          TrainingArguments)
+from trl import SFTConfig, SFTTrainer
+
 from yogpt_subnet.miner.utils.helpers import update_job_status
 
 
 def format_time(elapsed):
     return str(datetime.timedelta(seconds=int(round((elapsed)))))
+
 async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_id):
     """Train a model with the given parameters and upload it to Hugging Face."""
     base_model = str(base_model)
@@ -32,8 +37,17 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
     os.makedirs(dataset_dir, exist_ok=True)
 
     try:
+
+        # Set the WANDB API key
+        os.environ["WANDB_API_KEY"] = "efa7d98857a922cbe11e78fa1ac22b62a414fbf3"
         # Login to Hugging Face
         login(hf_token)
+
+        # Initialize wandb
+        wandb.init(project=job_id, entity="ai-research-lab", config={
+            "base_model": base_model,
+            "dataset_id": dataset_id,
+        })
 
         # Load dataset
         dataset = load_dataset(dataset_id, split="train", use_auth_token=hf_token)
@@ -116,7 +130,7 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
             optim="paged_adamw_8bit",       
             fp16=True,                      
             run_name="llama-2-guanaco",     
-            report_to="none"
+            report_to="wandb"
         )
 
         # Data collator
@@ -150,14 +164,15 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
             metrics = train_result.metrics
             trainer.save_metrics("train", metrics)
             trainer.save_state()
-        except Exception as e:
-            await update_job_status(job_id, 'pending')  # Update status back to pending
-            raise RuntimeError(f"Training failed: {str(e)}")
 
-        # Evaluate the model on the validation set
-        eval_metrics = trainer.evaluate()
-        accuracy = 0
-        loss = eval_metrics.get("eval_loss")
+            # Evaluate the model on the validation set
+            eval_metrics = trainer.evaluate()
+            accuracy = 0
+            loss = eval_metrics.get("eval_loss")
+        
+        except Exception as e:
+            await update_job_status(job_id, 'pending')
+            raise RuntimeError(f"Training failed: {str(e)}")
 
         # Create repository on Hugging Face and clone it locally
         api = HfApi()
