@@ -2,6 +2,7 @@ aiohttp
 pyfiglet
 psutil
 tensorboard
+bitsandbytes
 keyboard
 InquirerPy
 prompt_toolkit
@@ -13,7 +14,7 @@ python-dotenv
 trl
 prettytable
 loguru
-GPUtil
+GPUtilgoogle/gemma-2b-it
 pandas
 requests
 scikit-learn
@@ -38,3 +39,5 @@ nltk
 matplotlib
 seaborn
 scikit-learn
+wandb
+
