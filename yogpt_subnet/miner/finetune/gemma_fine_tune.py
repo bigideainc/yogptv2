@@ -1,20 +1,14 @@
 import datetime
 import os
-import random
 import shutil
 import time
-
-import matplotlib.pyplot as plt
-import nltk
-import numpy as np
-import pandas as pd
-import seaborn as sns
 import torch
 import wandb
+from trl import SFTTrainer
 from datasets import load_dataset
-from huggingface_hub import HfApi, Repository, create_repo, login
-from transformers import (DataCollatorForLanguageModeling, GPT2LMHeadModel,
-                          GPT2Tokenizer, Trainer, TrainingArguments)
+from huggingface_hub import login
+from transformers import (AutoTokenizer, AutoModelForCausalLM,TrainingArguments,BitsAndBytesConfig)
+from peft import LoraConfig, get_peft_model
 
 from yogpt_subnet.miner.models.storage.hugging_face_store import \
     HuggingFaceModelStore
@@ -24,8 +18,8 @@ from yogpt_subnet.miner.utils.helpers import update_job_status
 def format_time(elapsed):
     return str(datetime.timedelta(seconds=int(round((elapsed)))))
 
-async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id):
-    """Fine-tune GPT-2 model and upload it to Hugging Face."""
+async def fine_tune_gemma(base_model, dataset_id, new_model_name, hf_token, job_id):
+    """Fine-tune gemma model and upload it to Hugging Face."""
     print("Starting fine-tuning process...")
     base_model = str(base_model)
     print("*------base model specified-----*" + base_model)
@@ -35,6 +29,17 @@ async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id
     pipeline_start_time = time.time()
     dataset_dir = os.path.join("data", dataset_id)
     os.makedirs(dataset_dir, exist_ok=True)
+    lora_config = BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16
+    )
+    peft_config = LoraConfig(
+        task_type="CAUSAL_LM",
+        r=4,
+        lora_alpha=16,
+        lora_dropout=0.01,
+    )
 
     try:
         # Set the WANDB API key
@@ -52,47 +57,35 @@ async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id
 
         dataset = load_dataset(dataset_id, split="train", cache_dir=dataset_dir, trust_remote_code=True)
 
-        # Load GPT-2 tokenizer
-        tokenizer = GPT2Tokenizer.from_pretrained(base_model, pad_token="")
+        tokenizer = AutoTokenizer.from_pretrained(base_model)
+        model = AutoModelForCausalLM.from_pretrained(base_model, quantization_config=lora_config)
+        peft_model = get_peft_model(model, peft_config)
 
-        # Load GPT-2 model
-        model = GPT2LMHeadModel.from_pretrained(base_model)
+    
 
-        def tokenize_function(examples):
-            return tokenizer(examples["text"], truncation=True)
-
-        tokenized_dataset = dataset.map(tokenize_function, batched=True, remove_columns=dataset.column_names)
-
-        data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
-
-        def compute_loss(model, inputs):
-            labels = inputs.pop("labels")
-            outputs = model(**inputs, labels=labels)
-            return outputs.loss
+        tokenized_dataset = dataset.map(lambda samples: tokenizer(samples["quote"]), batched=True)
+        def formatting_func(example):
+            text = f"Quote: {tokenized_dataset['train']['quote'][0]}\nAuthor: {tokenized_dataset['train']['author'][0]}"
+            return [text]
 
         training_args = TrainingArguments(
-            output_dir='./results',
-            num_train_epochs=30,
-            per_device_train_batch_size=8,
-            warmup_steps=500,
-            weight_decay=0.01,
-            label_names=['input_ids', 'attention_mask'],
-            logging_dir='./logs',
-            eval_steps=500,
-            logging_steps=500,
-            run_name="gpt2_model_running",
-            fp16=False,
-            report_to="wandb"
+            output_dir="./fine-tuned_model",
+            overwrite_output_dir=True,
+            num_train_epochs=3,
+            per_device_train_batch_size=1, 
+            gradient_accumulation_steps=4, 
+            learning_rate=2e-4,
+            fp16=True,  
+            logging_steps=1,
+            optim="paged_adamw_8bit"
         )
-
         print("Setting up trainer........")
-        trainer = Trainer(
-            model=model,
+        trainer = SFTTrainer(
+            model=peft_model,
+            train_dataset=tokenized_dataset["train"],
             args=training_args,
-            train_dataset=tokenized_dataset,
-            tokenizer=tokenizer,
-            compute_metrics=compute_loss,
-            data_collator=data_collator
+            peft_config=peft_config,
+            formatting_func=formatting_func,
         )
         print("Trainer set up successfully.")
 

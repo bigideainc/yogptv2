@@ -33,6 +33,8 @@ from yogpt_subnet.miner.finetune.llama_fine_tune import \
     fine_tune_llama  # type:ignore
 from yogpt_subnet.miner.finetune.open_elm import \
     fine_tune_openELM  # type:ignore
+from yogpt_subnet.miner.finetune.gemma_fine_tune import fine_tune_gemma  #type: ignore
+
 from yogpt_subnet.miner.utils.helpers import (fetch_and_save_job_details,
                                               fetch_jobs,
                                               register_completed_job,
@@ -137,6 +139,9 @@ class Trainer(Module):
                 elif 'gpt' in model_detected:
                     self.console.log(f"Model is of type GPT: {model_id}")
                     model_repo_url, loss, accuracy, total_pipeline_time = await fine_tune_gpt(model_id, dataset_id, new_model_name, self.HF_ACCESS_TOKEN, job_id)
+                elif 'gemma' in model_detected:
+                    self.console.log(f"Model is of type Gemma: {model_id}")
+                    model_repo_url, loss, accuracy, total_pipeline_time = await fine_tune_gemma(model_id, dataset_id, new_model_name, self.HF_ACCESS_TOKEN, job_id)
                 elif 'openelm' in model_detected:
                     self.console.log(f"Model is of type OpenELM: {model_id}")
                     model_repo_url, loss, accuracy, total_pipeline_time = await fine_tune_openELM(model_id, dataset_id, new_model_name, self.HF_ACCESS_TOKEN, job_id)

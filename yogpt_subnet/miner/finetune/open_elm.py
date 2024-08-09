@@ -81,7 +81,7 @@ async def fine_tune_openELM(base_model, dataset_id, new_model_name, hf_token, jo
             eval_steps=250,
             logging_steps=1,
             learning_rate=lr,
-            num_train_epochs=3,
+            num_train_epochs=30,
             lr_scheduler_type="constant",
             optim='paged_adamw_8bit',
             bf16=False,
