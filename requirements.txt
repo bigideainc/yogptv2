@@ -14,7 +14,7 @@ python-dotenv
 trl
 prettytable
 loguru
-GPUtilgoogle/gemma-2b-it
+GPUtil
 pandas
 requests
 scikit-learn
