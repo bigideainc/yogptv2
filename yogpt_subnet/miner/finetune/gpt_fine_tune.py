@@ -72,7 +72,7 @@ async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id
 
         training_args = TrainingArguments(
             output_dir='./results',
-            num_train_epochs=3,
+            num_train_epochs=10,
             per_device_train_batch_size=16,
             warmup_steps=500,
             weight_decay=0.01,

@@ -71,7 +71,7 @@ async def fine_tune_gemma(base_model, dataset_id, new_model_name, hf_token, job_
         training_args = TrainingArguments(
             output_dir="./fine-tuned_model",
             overwrite_output_dir=True,
-            num_train_epochs=3,
+            num_train_epochs=10,
             per_device_train_batch_size=1, 
             gradient_accumulation_steps=4, 
             learning_rate=2e-4,
