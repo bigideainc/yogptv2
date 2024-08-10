@@ -40,4 +40,5 @@ matplotlib
 seaborn
 scikit-learn
 wandb
+communex
 

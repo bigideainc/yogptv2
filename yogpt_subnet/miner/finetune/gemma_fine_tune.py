@@ -34,12 +34,7 @@ async def fine_tune_gemma(base_model, dataset_id, new_model_name, hf_token, job_
         bnb_4bit_quant_type="nf4",
         bnb_4bit_compute_dtype=torch.bfloat16
     )
-    peft_config = LoraConfig(
-        task_type="CAUSAL_LM",
-        r=4,
-        lora_alpha=16,
-        lora_dropout=0.01,
-    )
+    
 
     try:
         # Set the WANDB API key
@@ -59,10 +54,13 @@ async def fine_tune_gemma(base_model, dataset_id, new_model_name, hf_token, job_
 
         tokenizer = AutoTokenizer.from_pretrained(base_model)
         model = AutoModelForCausalLM.from_pretrained(base_model, quantization_config=lora_config)
+        peft_config = LoraConfig(
+        task_type="CAUSAL_LM",
+        r=4,
+        lora_alpha=16,
+        lora_dropout=0.01,
+        )
         peft_model = get_peft_model(model, peft_config)
-
-    
-
         tokenized_dataset = dataset.map(lambda samples: tokenizer(samples["quote"]), batched=True)
         def formatting_func(example):
             text = f"Quote: {tokenized_dataset['train']['quote'][0]}\nAuthor: {tokenized_dataset['train']['author'][0]}"
@@ -72,17 +70,17 @@ async def fine_tune_gemma(base_model, dataset_id, new_model_name, hf_token, job_
             output_dir="./fine-tuned_model",
             overwrite_output_dir=True,
             num_train_epochs=10,
-            per_device_train_batch_size=1, 
+            per_device_train_batch_size=4, 
             gradient_accumulation_steps=4, 
             learning_rate=2e-4,
             fp16=True,  
-            logging_steps=1,
+            logging_steps=100,
             optim="paged_adamw_8bit"
         )
         print("Setting up trainer........")
         trainer = SFTTrainer(
             model=peft_model,
-            train_dataset=tokenized_dataset["train"],
+            train_dataset=tokenized_dataset,
             args=training_args,
             peft_config=peft_config,
             formatting_func=formatting_func,

@@ -153,7 +153,6 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
             args=training_args,
             peft_config=peft_config,
             train_dataset=train_dataset,
-            eval_dataset=eval_dataset,
             tokenizer=tokenizer,
             compute_metrics=compute_metrics,
         )
@@ -164,17 +163,12 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
             metrics = train_result.metrics
             trainer.save_metrics("train", metrics)
             trainer.save_state()
-
-            # Evaluate the model on the validation set
-            eval_metrics = trainer.evaluate()
             accuracy = 0
-            loss = eval_metrics.get("eval_loss")
-
+            loss = train_result.training_loss
         except Exception as e:
             await update_job_status(job_id, 'pending')
             raise RuntimeError(f"Training failed: {str(e)}")
 
-        # Create repository on Hugging Face and clone it locally
         api = HfApi()
         repo_url = api.create_repo(repo_id=job_id, token=hf_token)
         repo = Repository(local_dir=f"models/{job_id}", clone_from=repo_url, token=hf_token)
