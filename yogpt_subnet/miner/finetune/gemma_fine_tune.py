@@ -61,11 +61,13 @@ async def fine_tune_gemma(base_model, dataset_id, new_model_name, hf_token, job_
         lora_dropout=0.01,
         )
         peft_model = get_peft_model(model, peft_config)
-        tokenized_dataset = dataset.map(lambda samples: tokenizer(samples["quote"]), batched=True)
-        def formatting_func(example):
-            text = f"Quote: {tokenized_dataset['train']['quote'][0]}\nAuthor: {tokenized_dataset['train']['author'][0]}"
-            return [text]
 
+        tokenized_dataset = dataset.map(lambda samples: tokenizer(samples["quote"]), batched=True)
+        print("dataset tokenized")
+        def formatting_func(example):
+            text = f"Quote: {dataset['train']['quote'][0]}\nAuthor: {dataset['train']['author'][0]}"
+            return [text]
+        print("..... training starting ......")
         training_args = TrainingArguments(
             output_dir="./fine-tuned_model",
             overwrite_output_dir=True,
