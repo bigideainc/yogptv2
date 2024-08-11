@@ -130,12 +130,12 @@ class TextValidator(Module):
     def log_miner_weight(self, miner_id: int, weight: int) -> None:
         """Log miner weight in Firestore."""
         try:
-            miner_ref = db.collection('miners').document(str(miner_id))
+            miner_ref = db.collection('miner_weights').document(str(miner_id))
             miner_data = {
                 'weight': weight,
-                'timestamp': firestore.SERVER_TIMESTAMP  # Automatically set the current time
+                'timestamp': firestore.SERVER_TIMESTAMP
             }
-            miner_ref.set(miner_data, merge=True)  # Merge with existing data if any
+            miner_ref.set(miner_data, merge=True) 
             logger.info(f"Logged weight for miner {miner_id}: {weight}")
         except Exception as e:
             logger.error(f"Failed to log weight for miner {miner_id}: {e}")
