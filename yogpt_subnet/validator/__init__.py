@@ -16,7 +16,7 @@ from substrateinterface import Keypair
 
 from yogpt_subnet.base.utils import get_netuid #type:ignore
 from yogpt_subnet.validator._config import ValidatorSettings #type:ignore
-from yogpt_subnet.validator.model import ModelRewardChecker #type:ignore
+from yogpt_subnet.validator.validator_ import ModelRewardChecker #type:ignore
 
 class WeightHistory(BaseModel):
     time: datetime

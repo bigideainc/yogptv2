@@ -1,9 +1,15 @@
+from _config import ValidatorSettings
 import firebase_admin
 from firebase_admin import credentials, firestore
 from datetime import datetime, timedelta
 from communex.module.module import Module
+from communex.module.module import Module
+from communex.client import CommuneClient
+from communex.types import Ss58Address  
+from substrateinterface import Keypair
 from loguru import logger
 import os
+import time
 import warnings
 from dotenv import load_dotenv
 
@@ -25,8 +31,12 @@ firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 class ModelRewardChecker(Module):
-    def __init__(self) -> None:
+    def __init__(self,key: Keypair, netuid: int, client: CommuneClient, settings) -> None:
         super().__init__()
+        self.key = key
+        self.netuid = netuid
+        self.client = client
+        self.settings = settings
         self.model_thresholds = {
             "llama2-7b": {"threshold": 0.20, "training_per_hour": 1.2, "fine_tuning_time": (10, 12)},
             "OpenELM-270M": {"threshold": 0.50, "training_per_hour": 1.0, "fine_tuning_time": (3, 5)},
@@ -42,7 +52,6 @@ class ModelRewardChecker(Module):
         duration_str = job_data.get('totalPipelineTime')
         model_created = job_data.get('huggingFaceRepoId')
         
-        # Check if huggingFaceRepoId is not empty and contains 'huggingface'
         if not model_created or 'huggingface' not in model_created.lower():
             return 0, "No valid Hugging Face model created"
 
@@ -78,21 +87,36 @@ class ModelRewardChecker(Module):
 
         reward = training_per_hour * duration
         return reward, f"Reward granted for {duration:.2f} hours of training"
+    
+    def assign_weight(self, score):
+        """
+        Assign a weight based on the score. The score is normalized into a weight.
+        """
+        max_score = 1.0 
+        weight = int(score * 1000 / max_score)
+        return weight
 
     def reward_completed_jobs(self):
         jobs_ref = db.collection('completed_jobs').where('status', '==', 'pending_reward')
         completed_jobs = jobs_ref.stream()
+
+        score_dict = {}
         for job in completed_jobs:
             job_data = job.to_dict()
             reward, message = self.calculate_reward(job_data)
             logger.info(f"{reward} {message}")
             
             if reward > 0:
-                # Update the job status and add reward
+                # Assign weight based on reward (score)
+                score = reward / 100  # Normalize reward to a score out of 1
+                weight = self.assign_weight(score)
+                score_dict[job_data['minerId']] = score
+
                 job.reference.update({
                     'status': 'rewarded',
                     'reward': reward,
-                    'reward_message': message
+                    'reward_message': message,
+                    'weight': weight
                 })
                 self.update_miner_account(job_data['minerId'], reward)
             else:
@@ -102,27 +126,63 @@ class ModelRewardChecker(Module):
                     'reward_message': message
                 })
 
+        if score_dict:
+            self.set_weights(score_dict)
+    def set_weights(self, score_dict: dict[int, float]) -> None:
+        """
+        Set weights for miners based on their scores and update the blockchain.
+        """
+        # Apply cutting logic to conform with subnet weight limits
+        score_dict = self.cut_to_max_allowed_weights(score_dict)
+
+        weighted_scores = {uid: self.assign_weight(score) for uid, score in score_dict.items()}
+        uids = list(weighted_scores.keys())
+        weights = list(weighted_scores.values())
+
+        # Call the blockchain to vote and set weights
+        self.client.vote(key=self.key, uids=uids, weights=weights, netuid=self.netuid)
+    
+    def cut_to_max_allowed_weights(self, score_dict: dict[int, float], max_allowed_weights: int = 420) -> dict[int, float]:
+        """
+        Cut the scores to the maximum allowed weights.
+        """
+        sorted_scores = sorted(score_dict.items(), key=lambda x: x[1], reverse=True)
+        cut_scores = sorted_scores[:max_allowed_weights]
+        return dict(cut_scores)
+
     def update_miner_account(self, miner_id, reward):
         miner_ref = db.collection('miners').document(miner_id)
-        
-        # Get the current miner data
         miner_data = miner_ref.get().to_dict()
-        
+
         if miner_data is None:
             logger.error(f"Miner with ID {miner_id} not found")
             return
-        
-        # Check if the Account field exists
-        if 'Account' in miner_data:
-            # If it exists, add the reward to the current value
-            new_balance = miner_data['Account'] + reward
-        else:
-            # If it doesn't exist, create it with the reward value
-            new_balance = reward
-        
-        # Update the miner's account
-        miner_ref.update({
-            'Account': new_balance
-        })
-        
+
+        new_balance = miner_data.get('Account', 0) + reward
+        miner_ref.update({'Account': new_balance})
+
         logger.info(f"Updated miner {miner_id} account. New balance: {new_balance}")
+
+    
+    def validation_loop(self):
+        """
+        Run the validation loop continuously based on the provided settings.
+        """
+        while True:
+            start_time = time.time()
+            self.reward_completed_jobs()
+            elapsed = time.time() - start_time
+
+            if elapsed < self.settings.iteration_interval:
+                sleep_time = self.settings.iteration_interval - elapsed
+                logger.info(f"Sleeping for {sleep_time} seconds")
+                time.sleep(sleep_time)
+
+if __name__ == "__main__":
+    key = Keypair.create_from_uri('//ValidatorKey')
+    netuid = 12
+    client = CommuneClient('wss://your-blockchain-node')
+    settings = ValidatorSettings(iteration_interval=60)
+
+    validator = ModelRewardChecker(key=key, netuid=netuid, client=client, settings=settings)
+    validator.validation_loop()
