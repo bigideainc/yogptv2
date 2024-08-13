@@ -15,6 +15,8 @@ from transformers import (AutoModelForCausalLM, AutoTokenizer,
                           BitsAndBytesConfig, DataCollatorForSeq2Seq,
                           TrainingArguments)
 from trl import SFTConfig, SFTTrainer
+from yogpt_subnet.miner.models.storage.hugging_face_store import \
+    HuggingFaceModelStore
 
 from yogpt_subnet.miner.utils.helpers import update_job_status
 
@@ -126,7 +128,7 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
             per_device_eval_batch_size=1,   
             gradient_accumulation_steps=4,  
             learning_rate=2e-5,             
-            max_steps=100,                 
+            num_train_epochs=1,                
             optim="paged_adamw_8bit",       
             fp16=True,                      
             run_name="llama-2-guanaco",     
@@ -169,22 +171,33 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
             await update_job_status(job_id, 'pending')
             raise RuntimeError(f"Training failed: {str(e)}")
 
-        api = HfApi()
-        repo_url = api.create_repo(repo_id=job_id, token=hf_token)
-        repo = Repository(local_dir=f"models/{job_id}", clone_from=repo_url, token=hf_token)
+        # api = HfApi()
+        # repo_url = api.create_repo(repo_id=job_id, token=hf_token)
+        # repo = Repository(local_dir=f"models/{job_id}", clone_from=repo_url, token=hf_token)
 
-        # Save trained model locally in the cloned directory
-        trainer.model.save_pretrained(repo.local_dir)
-        trainer.tokenizer.save_pretrained(repo.local_dir)
+        # # Save trained model locally in the cloned directory
+        # trainer.model.save_pretrained(repo.local_dir)
+        # trainer.tokenizer.save_pretrained(repo.local_dir)
 
-        # Add all files to the git repository, commit, and push
-        repo.git_add(pattern=".")
-        repo.git_commit("Add fine-tuned model files")
-        repo.git_push()
+        # # Add all files to the git repository, commit, and push
+        # repo.git_add(pattern=".")
+        # repo.git_commit("Add fine-tuned model files")
+        # repo.git_push()
 
         # Capture the end time
         pipeline_end_time = time.time()
         total_pipeline_time = format_time(pipeline_end_time - pipeline_start_time)
+        store = HuggingFaceModelStore()
+        repo_url = store.upload_model(model, tokenizer, job_id)
+
+        # Capture the end time
+        pipeline_end_time = time.time()
+        total_pipeline_time = format_time(pipeline_end_time - pipeline_start_time)
+        print("........ model details...........")
+        print(repo_url)
+        print(loss)
+        print(accuracy)
+        print(total_pipeline_time)
 
         return repo_url, loss, accuracy, total_pipeline_time
 
