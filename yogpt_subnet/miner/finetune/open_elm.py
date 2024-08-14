@@ -73,6 +73,7 @@ async def fine_tune_openELM(base_model, dataset_id, new_model_name, hf_token, jo
         # Training arguments
         training_arguments = TrainingArguments(
             output_dir=f"out_{run_id}",
+            run_name=f"openenl_{run_id}",
             evaluation_strategy="steps",
             label_names=["labels"],
             per_device_train_batch_size=16,
