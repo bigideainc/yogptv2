@@ -19,12 +19,16 @@ def extract_address(string: str):
     return re.search(IP_REGEX, string)
 
 
-def get_netuid(client: CommuneClient, subnet_name: str = "mosaic"):
+def get_netuid(client: CommuneClient, subnet_name: str = "zui"):
     subnets = client.query_map_subnet_names()
+    logger.info(f"Available subnets: {subnets}")
+    
     for netuid, name in subnets.items():
-        if name == subnet_name:
-            logger.info("use netuid: {}", netuid)
+        if name.lower() == subnet_name.lower():
+            logger.info(f"Found netuid: {netuid} for subnet: {name}")
             return netuid
+    
+    logger.error(f"Subnet '{subnet_name}' not found. Available subnets: {list(subnets.values())}")
     raise ValueError(f"Subnet {subnet_name} not found")
 
 

@@ -8,6 +8,7 @@ sys.path.insert(0, os.getcwd())
 import typer
 from loguru import logger
 from communex.compat.key import classic_load_key
+from yogpt_subnet.validator import Validator, ValidatorSettings
 
 cli = typer.Typer()
 
@@ -52,14 +53,16 @@ def validator(
     call_timeout: int = 30,
     iteration_interval: int = 60,
 ):
-    from yogpt_subnet.validator import Validator, ValidatorSettings
-
+    
     settings = ValidatorSettings(
         use_testnet=ctx.obj.use_testnet,
         iteration_interval=iteration_interval,
         call_timeout=call_timeout,
         host=host,
         port=port,
+        max_allowed_weights=420,
+        subnet_name='yogpt',
+        logging_level='INFO'
     )
     validator = Validator(key=classic_load_key(commune_key), settings=settings)
     validator.serve()

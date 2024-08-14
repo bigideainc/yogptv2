@@ -28,7 +28,10 @@ class Validator(Module):
         self.settings = settings or ValidatorSettings()
         self.key = key
         self.netuid = get_netuid(self.c_client)
-        self.reward_checker = ModelRewardChecker()
+        self.reward_checker = ModelRewardChecker(key=self.key,
+            netuid=self.netuid,
+            client=self.c_client,
+            settings=self.settings)
     
     @property
     def c_client(self):
