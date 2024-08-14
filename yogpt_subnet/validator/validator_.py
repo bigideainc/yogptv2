@@ -138,7 +138,7 @@ class ModelRewardChecker(Module):
         weighted_scores = {uid: self.assign_weight(score) for uid, score in score_dict.items()}
         uids = list(weighted_scores.keys())
         weights = list(weighted_scores.values())
-
+        breakpoint()
         # Call the blockchain to vote and set weights
         self.client.vote(key=self.key, uids=uids, weights=weights, netuid=self.netuid)
     
