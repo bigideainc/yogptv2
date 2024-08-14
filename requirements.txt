@@ -41,4 +41,5 @@ seaborn
 scikit-learn
 wandb
 communex
+firebase_admin
 
