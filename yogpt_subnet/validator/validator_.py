@@ -31,12 +31,11 @@ firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 class ModelRewardChecker(Module):
-    def __init__(self,key: Keypair, netuid: int, client: CommuneClient, settings) -> None:
+    def __init__(self,key: Keypair, netuid: int, client: CommuneClient) -> None:
         super().__init__()
         self.key = key
         self.netuid = netuid
         self.client = client
-        self.settings = settings
         self.model_thresholds = {
             "llama2-7b": {"threshold": 0.20, "training_per_hour": 1.2, "fine_tuning_time": (10, 12)},
             "OpenELM-270M": {"threshold": 0.50, "training_per_hour": 1.0, "fine_tuning_time": (3, 5)},
@@ -182,7 +181,6 @@ if __name__ == "__main__":
     key = Keypair.create_from_uri('//ValidatorKey')
     netuid = 12
     client = CommuneClient('wss://your-blockchain-node')
-    settings = ValidatorSettings(iteration_interval=60)
 
-    validator = ModelRewardChecker(key=key, netuid=netuid, client=client, settings=settings)
+    validator = ModelRewardChecker(key=key, netuid=netuid, client=client)
     validator.validation_loop()
