@@ -19,9 +19,9 @@ def extract_address(string: str):
     return re.search(IP_REGEX, string)
 
 
-def get_netuid(client: CommuneClient, subnet_name: str = "zui"):
+def get_netuid(client: CommuneClient, subnet_name: str = "legend"):
     subnets = client.query_map_subnet_names()
-    logger.info(f"Available subnets: {subnets}")
+    # logger.info(f"Available subnets: {subnets}")
     
     for netuid, name in subnets.items():
         if name.lower() == subnet_name.lower():

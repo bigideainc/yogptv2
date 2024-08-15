@@ -14,11 +14,6 @@ from pydantic import BaseModel
 from .utils import get_ip_port, extract_address
 
 
-class SampleInput(BaseModel):
-    prompt: str
-    negative_prompt: str = ""
-    steps: int = 1
-    seed: Optional[int] = None
 
 
 class BaseValidator:
@@ -28,7 +23,6 @@ class BaseValidator:
     def get_miner_generation(
             self,
             miner_info: tuple[list[str], Ss58Address],
-            input: SampleInput,
     ) -> Optional[bytes]:
         try:
             connection, miner_key = miner_info
@@ -51,7 +45,6 @@ class BaseValidator:
     async def get_miner_generation_async(
             self,
             miner_info: tuple[list[str], Ss58Address],
-            input: SampleInput,
     ) -> Optional[bytes]:
         try:
             connection, miner_key = miner_info
@@ -72,7 +65,6 @@ class BaseValidator:
     async def get_miner_generation_with_elapsed(
             self,
             miner_info: tuple[list[str], Ss58Address],
-            input: SampleInput,
     ) -> tuple[Optional[bytes], float]:
         start = time.time()
         try:
