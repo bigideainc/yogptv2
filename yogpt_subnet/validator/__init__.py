@@ -2,10 +2,8 @@ import asyncio
 import threading
 import time
 import traceback
-from collections import deque
 from datetime import datetime
 from typing import List
-
 from communex._common import get_node_url
 from communex.client import CommuneClient
 from communex.compat.key import classic_load_key
@@ -13,10 +11,9 @@ from communex.module.module import Module, endpoint
 from loguru import logger
 from pydantic import BaseModel
 from substrateinterface import Keypair
-
-from yogpt_subnet.base.utils import get_netuid #type:ignore
-from yogpt_subnet.validator._config import ValidatorSettings #type:ignore
-from yogpt_subnet.validator.validator_ import ModelRewardChecker #type:ignore
+from yogpt_subnet.base.utils import get_netuid
+from yogpt_subnet.validator._config import ValidatorSettings
+from yogpt_subnet.validator.validator_ import ModelRewardChecker
 
 class WeightHistory(BaseModel):
     time: datetime
@@ -27,9 +24,10 @@ class Validator(Module):
         super().__init__()
         self.settings = settings or ValidatorSettings()
         self.key = key
-        self.netuid = get_netuid(self.c_client)
-        self.reward_checker = ModelRewardChecker()
-    
+        self.client = self.c_client
+        self.netuid = get_netuid(self.client)
+        self.reward_checker = ModelRewardChecker(key=self.key, netuid=self.netuid, client=self.client)
+
     @property
     def c_client(self):
         return CommuneClient(get_node_url(use_testnet=self.settings.use_testnet))
@@ -54,7 +52,8 @@ class Validator(Module):
                     logger.info(f"Sleeping for {sleep_time}")
                     time.sleep(sleep_time)
             except Exception as e:
-                print(traceback.format_exc())
+                logger.error(f"Error in validation loop: {e}")
+                logger.error(traceback.format_exc())
 
     def start_validation_loop(self):
         logger.info("start sync loop")
@@ -64,9 +63,7 @@ class Validator(Module):
     def serve(self):
         from communex.module.server import ModuleServer
         import uvicorn
-
         self.start_validation_loop()
-
         if self.settings.port:
             logger.info("server enabled")
             server = ModuleServer(self, self.key, subnets_whitelist=[self.netuid])

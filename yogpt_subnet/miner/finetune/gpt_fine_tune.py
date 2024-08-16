@@ -100,7 +100,7 @@ async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id
         # Train model
         try:
             train_result = trainer.train()
-            train_loss = train_result.training_loss
+            loss = train_result.training_loss
             accuracy = 0
 
         except Exception as e:
@@ -115,10 +115,10 @@ async def fine_tune_gpt(base_model, dataset_id, new_model_name, hf_token, job_id
         total_pipeline_time = format_time(pipeline_end_time - pipeline_start_time)
         print("........ model details...........")
         print(repo_url)
-        print(train_loss)
+        print(loss)
         print(accuracy)
         print(total_pipeline_time)
-        return repo_url, train_loss, accuracy, total_pipeline_time
+        return repo_url, loss, accuracy, total_pipeline_time
 
     except Exception as e:
         await update_job_status(job_id, 'pending')

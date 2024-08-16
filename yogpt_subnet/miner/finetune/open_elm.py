@@ -118,7 +118,7 @@ async def fine_tune_openELM(base_model, dataset_id, new_model_name, hf_token, jo
 
             # Collect metrics
             train_loss = train_result.training_loss
-            eval_loss = eval_result['eval_loss']
+            loss = eval_result['eval_loss']
             accuracy = 0
 
         except Exception as e:
@@ -134,10 +134,10 @@ async def fine_tune_openELM(base_model, dataset_id, new_model_name, hf_token, jo
         total_pipeline_time = format_time(pipeline_end_time - pipeline_start_time)
         print("........ model details...........")
         print(repo_url)
-        print(eval_loss)
+        print(loss)
         print(accuracy)
         print(total_pipeline_time)
-        return repo_url, eval_loss, accuracy, total_pipeline_time
+        return repo_url, loss, accuracy, total_pipeline_time
 
     except Exception as e:
         # Handle exceptions and update job status
