@@ -16,8 +16,8 @@ from communex.key import generate_keypair
 from communex._common import get_node_url
 
 from yogpt_subnet.miner._config import MinerSettings  # type: ignore
-from yogpt_subnet.base.utils import get_netuid #type:ignore
-from yogpt_subnet.miner.auth.trainer import Trainer  # type: ignore
+from yogpt_subnet.base.utils import get_netuid 
+from yogpt_subnet.miner.auth.trainer import Trainer  
 
 
 class Miner(Module):
@@ -31,6 +31,40 @@ class Miner(Module):
         self.netuid = get_netuid(self.c_client)
         self.trainer = Trainer()
         self.stop_event = Event()
+
+        # Print out key and UID information
+        self.print_key_info()
+        self.print_miner_uid()
+
+    def print_key_info(self):
+        """
+        Prints out the key information (SS58 address, public key, etc.)
+        on the network for the miner.
+        """
+        logger.info(f"Miner Key Information:")
+        logger.info(f"SS58 Address: {self.key.ss58_address}")
+        logger.info(f"Public Key (Hex): {self.key.public_key.hex()}")
+        logger.info(f"Key Type: {self.key.crypto_type}")
+        logger.info(f"Network UID: {self.netuid}")
+
+    def print_miner_uid(self):
+        """
+        Prints out the miner's UID on the network based on its SS58 address.
+        """
+        try:
+            # Get the map of keys (UID -> SS58 Address) for the network
+            modules_keys = self.c_client.query_map_key(self.netuid)
+            val_ss58 = self.key.ss58_address
+
+            # Find the miner's UID by matching the SS58 address
+            miner_uid = next(uid for uid, address in modules_keys.items() if address == val_ss58)
+
+            logger.info(f"Miner UID on the network: {miner_uid}")
+
+        except StopIteration:
+            logger.error(f"Miner SS58 address {self.key.ss58_address} not found in the network.")
+        except Exception as e:
+            logger.error(f"Error retrieving miner UID: {e}")
 
     def serve(self):
         from communex.module.server import ModuleServer
@@ -59,6 +93,7 @@ class Miner(Module):
         self.stop_event.set()
         self.trainer.stop()  # Ensure trainer has a stop method to cleanup resources
 
+
 if __name__ == "__main__":
     settings = MinerSettings(
         host="0.0.0.0",
@@ -66,8 +101,6 @@ if __name__ == "__main__":
         use_testnet=True,
     )
     miner = Miner(key=classic_load_key("yogpt-miner0"), settings=settings)
-
-    # Set up signal handling in the main thread
     signal.signal(signal.SIGINT, miner.handle_interrupt)
     signal.signal(signal.SIGTERM, miner.handle_interrupt)
 

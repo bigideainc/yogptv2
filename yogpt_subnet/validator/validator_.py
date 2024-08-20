@@ -133,15 +133,42 @@ class ModelRewardChecker(Module):
         if score_dict:
             self.set_weights(score_dict)
         
-    def set_weights(self, score_dict: dict[int, float]) -> None:
+    def set_weights(self, score_dict: dict[str, float]) -> None:
+        """
+        Sets the weights for miners after mapping their SS58 addresses to UIDs.
+        """
         logger.info(f"Setting weights for miners: {score_dict}")
+
+        # Step 1: Cut the scores to the maximum allowed weights
         score_dict = self.cut_to_max_allowed_weights(score_dict)
-        weighted_scores = {uid: self.assign_weight(score) for uid, score in score_dict.items()}
+
+        # Step 2: Get the map of UIDs and SS58 addresses from the network
+        modules_keys = self.client.query_map_key(self.netuid)
+        
+        # Step 3: Map SS58 addresses to UIDs
+        uid_scores = {}
+        for ss58_address, score in score_dict.items():
+            miner_uid = next((uid for uid, address in modules_keys.items() if address == ss58_address), None)
+            
+            if miner_uid is not None:
+                uid_scores[miner_uid] = score
+            else:
+                logger.warning(f"SS58 address {ss58_address} not found in network, skipping.")
+        
+        # If no valid UIDs were found, log an error and return
+        if not uid_scores:
+            logger.error("No valid UIDs were found for the provided SS58 addresses.")
+            return
+
+        # Step 4: Assign weights to UIDs
+        weighted_scores = {uid: self.assign_weight(score) for uid, score in uid_scores.items()}
         uids = list(weighted_scores.keys())
-        # uids=[1]
-        logger.info(f"uids listed {uids}")
         weights = list(weighted_scores.values())
-        logger.info(f"weights gained {weights}")
+
+        logger.info(f"UIDs listed: {uids}")
+        logger.info(f"Weights gained: {weights}")
+
+        # Step 5: Try voting with the assigned weights
         try:
             self.client.vote(key=self.key, uids=uids, weights=weights, netuid=self.netuid)
         except Exception as e:
