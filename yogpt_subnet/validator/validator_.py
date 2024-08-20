@@ -1,10 +1,10 @@
-import firebase_admin
-from firebase_admin import credentials, firestore
 from communex.module.module import Module
 from communex.client import CommuneClient
 from substrateinterface import Keypair
 from loguru import logger
 import os
+import asyncio
+from yogpt_subnet.validator.utils import fetch_completed_jobs
 import warnings
 from dotenv import load_dotenv
 
@@ -15,15 +15,6 @@ warnings.filterwarnings(
 
 load_dotenv()
 
-cred_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
-
-if not os.path.exists(cred_path):
-    raise FileNotFoundError(f"Credential file not found: {cred_path}")
-
-cred = credentials.Certificate(cred_path)
-firebase_admin.initialize_app(cred)
-
-db = firestore.client()
 
 class ModelRewardChecker(Module):
     def __init__(self, key: Keypair, netuid: int, client: CommuneClient) -> None:
@@ -105,30 +96,38 @@ class ModelRewardChecker(Module):
         logger.info(f"Calculated reward: {reward} for job '{job_data.get('jobId')}'")
         return reward, f"Reward granted for {duration:.2f} hours of training"
 
-    def reward_completed_jobs(self):
+    async def reward_completed_jobs(self):
         logger.info("Checking completed jobs for rewards...")
-        jobs_ref = db.collection('completed_jobs')
-        completed_jobs = jobs_ref.stream()
+        # jobs_ref = db.collection('completed_jobs')
+        completed_jobs = await fetch_completed_jobs()
+        if isinstance(completed_jobs, str) and completed_jobs == "Unauthorized":
+            logger.error("Unauthorized access when fetching completed jobs")
+            return
+
+        if not completed_jobs:
+            logger.info("No completed jobs found")
+            return
 
         score_dict = {}
         for job in completed_jobs:
-            job_data = job.to_dict()
-            reward, message = self.calculate_reward(job_data)
-            logger.info(f"Job '{job_data.get('jobId')}': {reward} - {message}")
+            print("jobs computed .....")
+            reward, message = self.calculate_reward(job)
+            logger.info(f"Job '{job.get('jobId')}': {reward} - {message}")
             
             if reward > 0:
-                score = reward / 100
-                score_dict[job_data['minerId']] = score
-                job.reference.update({
-                    'status': 'rewarded',
-                    'reward': reward,
-                    'reward_message': message
-                })
+                score = reward / 100 #normalizing the weights
+                score_dict[job['minerId']] = score
+        #         job.reference.update({
+        #             'status': 'rewarded',
+        #             'reward': reward,
+        #             'reward_message': message
+        #         })
             else:
-                job.reference.update({
-                    'status': 'not_rewarded',
-                    'reward_message': message
-                })
+                logger.info(f"Job '{job.get('jobId')}': {reward} - {message}")
+        #         job.reference.update({
+        #             'status': 'not_rewarded',
+        #             'reward_message': message
+        #         })
         
         if score_dict:
             self.set_weights(score_dict)

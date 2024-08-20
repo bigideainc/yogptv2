@@ -37,7 +37,7 @@ class Validator(Module):
         return list(self.weights_histories)
 
     async def validate_step(self):
-        self.reward_checker.reward_completed_jobs()
+        await self.reward_checker.reward_completed_jobs()
 
     def validation_loop(self) -> None:
         settings = self.settings
