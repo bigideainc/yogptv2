@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 
 load_dotenv()
 BASE_URL = os.getenv("BASE_URL")
-print(BASE_URL)
 async def fetch_completed_jobs():
     print("Fetching completed jobs")
     async with aiohttp.ClientSession() as session:
