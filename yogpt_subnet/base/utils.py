@@ -21,7 +21,6 @@ def extract_address(string: str):
 
 def get_netuid(client: CommuneClient, subnet_name: str = "legend"):
     subnets = client.query_map_subnet_names()
-    logger.info(f"Available subnets: {subnets}")
     
     for netuid, name in subnets.items():
         if name.lower() == subnet_name.lower():

@@ -153,9 +153,6 @@ class ModelRewardChecker(Module):
         weighted_scores = {uid: self.assign_weight(score) for uid, score in uid_scores.items()}
         uids = list(weighted_scores.keys())
         weights = list(weighted_scores.values())
-
-        logger.info(f"UIDs listed: {uids}")
-        logger.info(f"Weights gained: {weights}")
         try:
             self.client.vote(key=self.key, uids=uids, weights=weights, netuid=self.netuid)
         except Exception as e:
