@@ -25,9 +25,7 @@ class Miner(Module):
         super().__init__()
         self.settings = settings or MinerSettings()
         self.key = key
-        self.c_client = CommuneClient(
-            get_node_url(use_testnet=self.settings.use_testnet)
-        )
+        self.c_client = CommuneClient(get_node_url(use_testnet=self.settings.use_testnet))
         self.netuid = get_netuid(self.c_client)
         self.trainer = Trainer()
         self.stop_event = Event()
