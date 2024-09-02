@@ -95,6 +95,7 @@ class ModelRewardChecker(Module):
     async def reward_completed_jobs(self):
         logger.info("Checking completed jobs for rewards...")
         completed_jobs = await fetch_completed_jobs()
+        
         if isinstance(completed_jobs, str) and completed_jobs == "Unauthorized":
             logger.error("Unauthorized access when fetching completed jobs")
             return

@@ -30,9 +30,9 @@ def main(
     logger.add(sys.stdout, level=log_level.upper())
 
     if testnet:
-        logger.info("using testnet")
+        logger.info("use testnet")
     else:
-        logger.info("using mainnet")
+        logger.info("use mainnet")
 
     ctx.obj = ExtraCtxData(use_testnet=testnet)
 
@@ -51,8 +51,8 @@ def validator(
     ] = "0.0.0.0",
     port: Annotated[Optional[int], typer.Argument(help="port")] = 0,
     call_timeout: int = 30,
-    iteration_interval: int = 60,):
-    
+    iteration_interval: int = 60,
+):
     
     settings = ValidatorSettings(
         use_testnet=ctx.obj.use_testnet,
