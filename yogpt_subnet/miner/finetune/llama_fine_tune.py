@@ -128,7 +128,7 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
             per_device_eval_batch_size=1,   
             gradient_accumulation_steps=4,  
             learning_rate=2e-5,             
-            num_train_epochs=1,                
+            num_train_epochs=1000,                
             optim="paged_adamw_8bit",       
             fp16=True,                      
             run_name="llama-2-guanaco",     

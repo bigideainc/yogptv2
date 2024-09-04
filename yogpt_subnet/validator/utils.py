@@ -25,10 +25,10 @@ async def fetch_completed_jobs():
                         "completedAt": job["completedAt"],
                         "reward": float(job.get("reward", 0)),
                         "reward_message": job["reward_message"],
-                        "status": job["status"],
                         "model_tuned": job.get("model_tuned", None)
                     }
                     for job in jobs
+                    if "status" not in job
                 ]
             elif response.status == 401:
                 return "Unauthorized"
