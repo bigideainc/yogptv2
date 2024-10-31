@@ -19,7 +19,7 @@ def extract_address(string: str):
     return re.search(IP_REGEX, string)
 
 
-def get_netuid(client: CommuneClient, subnet_name: str = "legend"):
+def get_netuid(client: CommuneClient, subnet_name: str = "yogpt"):
     subnets = client.query_map_subnet_names()
     # logger.info(f"Available subnets: {subnets}")
     
