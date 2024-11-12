@@ -1,13 +1,14 @@
-from typing import Annotated, Optional
-from dataclasses import dataclass
-import sys
 import os
+import sys
+from dataclasses import dataclass
+from typing import Annotated, Optional
 
 sys.path.insert(0, os.getcwd())
 
 import typer
-from loguru import logger
 from communex.compat.key import classic_load_key
+from loguru import logger
+
 from yogpt_subnet.validator import Validator, ValidatorSettings
 
 cli = typer.Typer()
@@ -83,7 +84,7 @@ def miner(
     port: Annotated[int, typer.Argument(help="port")],
     testnet: bool = False,
 ):
-    from yogpt_subnet.miner import Miner, MinerSettings # type: ignore
+    from yogpt_subnet.miner import Miner, MinerSettings  # type: ignore
 
     settings = MinerSettings(use_testnet=ctx.obj.use_testnet, host=host, port=port)
     miner = Miner(key=classic_load_key(commune_key), settings=settings)
