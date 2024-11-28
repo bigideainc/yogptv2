@@ -12,111 +12,108 @@ This guide provides step-by-step instructions for setting up and running both mi
 - [Troubleshooting](#troubleshooting)
 
 ## Prerequisites
-
 Before you begin, ensure you have the following installed:
 - Python 3.8 or higher
-- pip (Python package manager)
+- pip (Python package manager) 
 - Git
 - curl
 
 ## Installation
-
-1. Install CommuneX using pip:
-```bash
-pip install communex
-```
-
-2. Install Poetry (package manager):
-```bash
-curl -sSL https://install.python-poetry.org | python3 -
-```
-
-## Wallet Setup
-
-1. Create a new wallet key:
-```bash
-comx key create <your-key-name>
-```
-
-Replace `<your-key-name>` with your desired key identifier.
-
-2. Save your key information securely. You'll need this for running nodes.
-
-## Project Setup
-
-1. Clone the YoGPT repository:
+1. Clone repository:
 ```bash
 git clone https://github.com/bigideainc/yogpt.git
 ```
 
-2. Navigate to the project directory:
+2. Navigate to project:
 ```bash
 cd yogpt
 ```
 
-3. Install the TRL package using Poetry:
+3. Install Poetry:
 ```bash
-~/.local/bin/poetry run pip install git+https://github.com/huggingface/trl.git
+curl -sSL https://install.python-poetry.org | python3 -
 ```
+
+## Project Setup
+1. Install dependencies:
+```bash
+poetry install
+```
+
+2. Enter Poetry shell:
+```bash
+poetry shell
+```
+
+3. Install requirements:
+```bash
+pip install -r requirements.txt
+```
+
+4. Install TRL package:
+```bash
+pip install git+https://github.com/huggingface/trl.git
+```
+
+## Wallet Setup
+Create a new wallet key:
+```bash
+comx key create <your-key-name>
+```
+Replace `<your-key-name>` with your desired key identifier.
+Save your key information securely. You'll need this for running nodes.
 
 ## Running a Miner Node
-
 To run a miner node on the testnet:
-
 ```bash
-python yogpt-subnet/cli.py --testnet miner <key> <ip-address> <port> <username> <password>
+python yogpt_subnet/cli.py --testnet miner <your-key-name> <ip-address> <port> <username> <password>
 ```
-
-Replace the placeholder values:
-- `<key>`: Your wallet key name created earlier
-- `<ip-address>`: Your node's IP address
-- `<port>`: Port number for the node
-- `<username>`: Your username
-- `<password>`: Your password
+Replace:
+* `<key>`: Your wallet key name created earlier
+* `<ip-address>`: Your node's IP address
+* `<port>`: Port number for the node
+* `<username>`: Your username
+* `<password>`: Your password
 
 Example:
 ```bash
-python yogpt-subnet/cli.py --testnet miner mykey 192.168.1.100 8080 user1 pass123
+python yogpt_subnet/cli.py --testnet miner mykey 192.168.1.100 8080 user1 pass123
 ```
 
 ## Running a Validator Node
-
 Similar to running a miner, but use the validator command:
-
 ```bash
-python yogpt-subnet/cli.py --testnet validator <key> <ip-address> <port> <username> <password>
+python yogpt_subnet/cli.py --testnet validator <your-key-name> <ip-address> <port> <username> <password>
 ```
 
 ## Troubleshooting
-
 Common issues and solutions:
+1. **Poetry Installation**
+   * Not found: Restart terminal
+   * PATH issues: `export PATH="/home/$USER/.local/bin:$PATH"`
 
-1. **Port Already in Use**
-   - Check if another process is using the specified port
-   - Try using a different port number
+2. **Dependencies**
+   * Update pip: `pip install --upgrade pip`
+   * Cache issues: Use `--no-cache-dir` flag
 
-2. **Connection Issues**
-   - Verify your IP address is correct
-   - Ensure your firewall allows the specified port
-   - Check network connectivity
+3. **TRL Installation**
+   * If fails: `pip install --no-cache-dir git+https://github.com/huggingface/trl.git`
 
-3. **Key Issues**
-   - Verify your key was created correctly
-   - Ensure you're using the correct key name
-   - Try recreating the key if issues persist
+4. **Port Issues**
+   * Check if port in use
+   * Try different port number
+   * Check firewall settings
 
-## Additional Resources
-
-- [CommuneX Documentation](https://communex.docs)
-- [A9Labs Support](https://a9labs.support)
-- [YoGPT GitHub Repository](https://github.com/bigideainc/yogpt)
+5. **Key Problems**
+   * Verify key name
+   * Check permissions
+   * Try recreating key
 
 ## Support
-
-For additional support or questions, please join our community:
-- Discord: [A9Labs Discord](https://discord.gg/a9labs)
-- Telegram: [A9Labs Telegram](https://t.me/a9labs)
+For additional support:
+* Discord: A9Labs Discord
+* Telegram: A9Labs Telegram
+* GitHub: YoGPT Repository
 
 ## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the LICENSE file for details
