@@ -1,13 +1,12 @@
 import re
-from dataclasses import dataclass, asdict
-
-from loguru import logger
+from dataclasses import asdict, dataclass
 
 from communex.client import CommuneClient
-from substrateinterface import Keypair
-from communex.module.client import ModuleClient
 from communex.compat.key import check_ss58_address
+from communex.module.client import ModuleClient
 from communex.types import Ss58Address
+from loguru import logger
+from substrateinterface import Keypair
 
 IP_REGEX = re.compile(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+")
 
@@ -19,7 +18,7 @@ def extract_address(string: str):
     return re.search(IP_REGEX, string)
 
 
-def get_netuid(client: CommuneClient, subnet_name: str = "yogpt"):
+def get_netuid(client: CommuneClient, subnet_name: str = "legend"):
     subnets = client.query_map_subnet_names()
     # logger.info(f"Available subnets: {subnets}")
     
