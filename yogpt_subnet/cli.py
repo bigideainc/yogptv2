@@ -62,7 +62,7 @@ def validator(
         host=host,
         port=port,
         max_allowed_weights=420,
-        subnet_name='yogpt',
+        subnet_name='legend',
         logging_level='INFO'
     )
     validator = Validator(key=classic_load_key(commune_key), settings=settings)
