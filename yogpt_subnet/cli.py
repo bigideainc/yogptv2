@@ -67,8 +67,7 @@ def validator(
     )
     validator = Validator(key=classic_load_key(commune_key), settings=settings)
     validator.serve()
-
-
+    
 @cli.command("miner")
 def miner(
     ctx: typer.Context,
@@ -78,17 +77,49 @@ def miner(
     host: Annotated[
         str,
         typer.Argument(
-            help="the public ip you've registered, you can simply put 0.0.0.0 here to allow all incoming requests"
+            help="The public IP you've registered; you can simply put 0.0.0.0 here to allow all incoming requests"
         ),
     ],
-    port: Annotated[int, typer.Argument(help="port")],
+    port: Annotated[int, typer.Argument(help="Port")],
+    username: Annotated[str, typer.Argument(help="Username for authentication")],
+    password: Annotated[str, typer.Argument(help="Password for authentication")],
     testnet: bool = False,
 ):
+
     from yogpt_subnet.miner import Miner, MinerSettings  # type: ignore
+    from yogpt_subnet.miner.auth.auth import authenticate
+
+    # Authenticate with username and password
+    token, miner_id = authenticate(username, password)
 
     settings = MinerSettings(use_testnet=ctx.obj.use_testnet, host=host, port=port)
     miner = Miner(key=classic_load_key(commune_key), settings=settings)
+
+    # Pass the token and miner_id (if needed) to the miner
+    miner.token = token
+    miner.miner_id = miner_id
     miner.serve()
+
+# @cli.command("miner")
+# def miner(
+#     ctx: typer.Context,
+#     commune_key: Annotated[
+#         str, typer.Argument(help="Name of the key present in `~/.commune/key`")
+#     ],
+#     host: Annotated[
+#         str,
+#         typer.Argument(
+#             help="the public ip you've registered, you can simply put 0.0.0.0 here to allow all incoming requests"
+#         ),
+#     ],
+#     port: Annotated[int, typer.Argument(help="port")],
+#     testnet: bool = False,
+# ):
+#     from yogpt_subnet.miner import Miner, MinerSettings  # type: ignore
+
+#     settings = MinerSettings(use_testnet=ctx.obj.use_testnet, host=host, port=port)
+#     miner = Miner(key=classic_load_key(commune_key), settings=settings)
+#     miner.serve()
 
 
 

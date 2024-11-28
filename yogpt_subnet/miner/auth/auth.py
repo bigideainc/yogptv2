@@ -1,11 +1,12 @@
 import json
 import os
-import sys
-import requests
 import platform
-import psutil
+import sys
+
 import GPUtil
-from dotenv import load_dotenv, set_key, find_dotenv
+import psutil
+import requests
+from dotenv import find_dotenv, load_dotenv, set_key
 
 # Load environment variables
 load_dotenv()
@@ -89,3 +90,4 @@ if __name__ == "__main__":
         authenticate(username, password)
     else:
         print("Invalid command or arguments")
+
