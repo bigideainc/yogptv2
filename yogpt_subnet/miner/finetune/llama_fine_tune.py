@@ -2,62 +2,42 @@ import datetime
 import os
 import shutil
 import time
-
 import bitsandbytes as bnb
 import evaluate
 import numpy as np
 import torch
+import json
 import wandb
+import asyncio
+from typing import Tuple
 from datasets import load_dataset
-from huggingface_hub import HfApi, Repository, create_repo, login, whoami
 from peft import LoraConfig, TaskType, get_peft_model
-from transformers import (AutoModelForCausalLM, AutoTokenizer,
-                          BitsAndBytesConfig, DataCollatorForSeq2Seq,
-                          TrainingArguments)
+from transformers import (AutoModelForCausalLM, AutoTokenizer,BitsAndBytesConfig, DataCollatorForSeq2Seq,TrainingArguments)
 from trl import SFTConfig, SFTTrainer
-from yogpt_subnet.miner.models.storage.hugging_face_store import \
-    HuggingFaceModelStore
+from huggingface_hub import HfApi, login
+import uuid
+from utils.HFManager import commit_to_central_repo
+from utils.Helper import register_completed_job
+from utils.wandb_initializer import initialize_wandb
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
 
-from yogpt_subnet.miner.utils.helpers import update_job_status
 
-
-def format_time(elapsed):
-    return str(datetime.timedelta(seconds=int(round((elapsed)))))
-
-async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_id):
+async def fine_tune_llama(dataset_id,epochs, batch_size, learning_rate,hf_token, job_id, miner_uid):
     """Train a model with the given parameters and upload it to Hugging Face."""
-    base_model = str(base_model)
-    print("------base model specified-----" + base_model)
-    print(".......new model name ........" + new_model_name)
-    print(".......dataset specified ........" + dataset_id)
-
-    # Capture the start time
-    pipeline_start_time = time.time()
-
-    # Designate directories
-    dataset_dir = os.path.join("data", dataset_id)
-    os.makedirs(dataset_dir, exist_ok=True)
+    base_model = str("NousResearch/Llama-2-7b-chat-hf")
 
     try:
-        # Set the WANDB API key
-        os.environ["WANDB_API_KEY"] = "efa7d98857a922cbe11e78fa1ac22b62a414fbf3"
-        
         # Login to Hugging Face
         login(hf_token)
-
         # Initialize wandb
-        wandb.init(project=job_id, entity="ai-research-lab", config={
-            "base_model": base_model,
-            "dataset_id": dataset_id,
-        })
-
+        wandb_run = initialize_wandb(job_id, miner_uid)
         # Load dataset
-        dataset = load_dataset(dataset_id, split="train", use_auth_token=hf_token)
-
+        dataset = load_dataset(dataset_id, split="train",token=hf_token)
         # Split dataset into training and validation sets (90% train, 10% validation)
         split_dataset = dataset.train_test_split(test_size=0.1)
-        train_dataset = split_dataset['train']
-        eval_dataset = split_dataset['test']
+        train_dataset, eval_dataset = split_dataset["train"], split_dataset["test"]
 
         # Set model configuration for Kaggle compatibility
         bnb_config = BitsAndBytesConfig(
@@ -65,7 +45,6 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
             bnb_4bit_use_double_quant=True,
             bnb_4bit_quant_type="nf4",
             bnb_4bit_compute_dtype=torch.bfloat16,
-            llm_int8_has_fp16_weight=False,
         )
 
         # Initialize tokenizer
@@ -79,30 +58,24 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
         model = AutoModelForCausalLM.from_pretrained(
             base_model,
             quantization_config=bnb_config,
-            use_auth_token=hf_token,
+            token=hf_token,
             trust_remote_code=True,
             low_cpu_mem_usage=True,
             device_map='auto'
         )
-        model.config.use_cache = False
-        model.config.pretraining_tp = 1
 
         # Enable gradient checkpointing
-        model.supports_gradient_checkpointing = True  
-        model.gradient_checkpointing_enable()     
-        model.enable_input_require_grads()    
         model.config.use_cache = False
+        model.gradient_checkpointing_enable()
+        model.enable_input_require_grads()
 
-        # Find all linear layers
         def find_all_linear_names(model):
-            cls = bnb.nn.Linear4bit
+            cls = torch.nn.Linear
             lora_module_names = set()
             for name, module in model.named_modules():
                 if isinstance(module, cls):
-                    names = name.split('.')
+                    names = name.split(".")
                     lora_module_names.add(names[0] if len(names) == 1 else names[-1])
-            if 'lm_head' in lora_module_names:
-                lora_module_names.remove('lm_head')
             return list(lora_module_names)
 
         lora_modules = find_all_linear_names(model)
@@ -116,102 +89,81 @@ async def fine_tune_llama(base_model, dataset_id, new_model_name, hf_token, job_
             lora_dropout=0.1,
             target_modules=lora_modules
         )
-        peft_model = get_peft_model(model, peft_config)
-        peft_model.is_parallelizable = True
-        peft_model.model_parallel = True
-        peft_model.print_trainable_parameters()
+        model = get_peft_model(model, peft_config)
 
         # Training arguments
         training_args = TrainingArguments(
             output_dir="./results",  
-            per_device_train_batch_size=2,  
-            per_device_eval_batch_size=1,   
+            per_device_train_batch_size=batch_size,   
             gradient_accumulation_steps=4,  
-            learning_rate=2e-5,             
-            num_train_epochs=1000,                
+            learning_rate=learning_rate,             
+            num_train_epochs=epochs,                
             optim="paged_adamw_8bit",       
             fp16=True,                      
-            run_name="llama-2-guanaco",     
+            run_name=f"miner_{miner_uid}",     
             report_to="wandb"
         )
 
         # Data collator
         data_collator = DataCollatorForSeq2Seq(tokenizer, model=model)
 
-        # Define compute metrics
-        accuracy_metric = evaluate.load("accuracy")
-        def compute_metrics(eval_pred):
-            logits, labels = eval_pred
-            predictions = np.argmax(logits, axis=-1)
-            accuracy = accuracy_metric.compute(predictions=predictions, references=labels)
-            loss = np.mean(logits - labels)  # Dummy calculation for loss
-            return {"accuracy": accuracy["accuracy"], "loss": loss}
-
         # Trainer setup
         trainer = SFTTrainer(
-            max_seq_length=None,
-            model=peft_model,
-            dataset_text_field="text",
+            model=model,
             args=training_args,
-            peft_config=peft_config,
             train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
             tokenizer=tokenizer,
-            compute_metrics=compute_metrics,
+            data_collator=data_collator,
         )
 
         # Train model
-        try:
-            train_result = trainer.train()
-            metrics = train_result.metrics
-            trainer.save_metrics("train", metrics)
-            trainer.save_state()
-            accuracy = 0
-            loss = train_result.training_loss
-        except Exception as e:
-            await update_job_status(job_id, 'pending')
-            raise RuntimeError(f"Training failed: {str(e)}")
+        start_time = time.time()
+        train_result = trainer.train()
+        metrics = train_result.metrics
+        trainer.save_metrics("train", metrics)
+        trainer.save_state()
+        total_training_time = time.time() - start_time
 
-        # api = HfApi()
-        # repo_url = api.create_repo(repo_id=job_id, token=hf_token)
-        # repo = Repository(local_dir=f"models/{job_id}", clone_from=repo_url, token=hf_token)
+        wandb_run.log({
+            "final_loss": metrics.get("train_loss"),
+            "training_time": total_training_time,
+            "epochs": epochs,
+            "batch_size": batch_size,
+            "learning_rate": learning_rate,
+        })
 
-        # # Save trained model locally in the cloned directory
-        # trainer.model.save_pretrained(repo.local_dir)
-        # trainer.tokenizer.save_pretrained(repo.local_dir)
+        # Push Model to Hugging Face
+        repo_name = f"finetuned-{base_model}-{job_id}-{int(time.time())}"
+        repo_url = hf_api.create_repo(repo_name, private=False)
+        model.push_to_hub(repo_name, token=hf_token)
+        tokenizer.push_to_hub(repo_name, token=hf_token)
 
-        # # Add all files to the git repository, commit, and push
-        # repo.git_add(pattern=".")
-        # repo.git_commit("Add fine-tuned model files")
-        # repo.git_push()
+        metrics.update({
+            "training_time": total_training_time,
+            "model_repo": repo_url,
+            "final_loss": metrics.get("train_loss"),
+            "miner_uid": miner_uid,
+            "datasetid":dataset_id,
+            "total_epochs": epochs,
+            "job_id": job_id,
+        })
 
-        # Capture the end time
-        pipeline_end_time = time.time()
-        total_pipeline_time = format_time(pipeline_end_time - pipeline_start_time)
-        store = HuggingFaceModelStore()
-        repo_url = store.upload_model(model, tokenizer, job_id)
-
-        # Capture the end time
-        pipeline_end_time = time.time()
-        total_pipeline_time = format_time(pipeline_end_time - pipeline_start_time)
-        print("........ model details...........")
-        print(repo_url)
-        print(loss)
-        print(accuracy)
-        print(total_pipeline_time)
-
-        return repo_url, loss, accuracy, total_pipeline_time
+        commit_to_central_repo(repo_url, metrics, miner_uid)
+        wandb_run.finish()
+        print(f"Model training and upload is completed")
+        print(f"Your trained model has been uplodaed to {repo_url} repository")
+        print(f"Your training results have been submitted to the validator")
+        return metrics
 
     except Exception as e:
-        await update_job_status(job_id, 'pending')
-        raise RuntimeError(f"Training pipeline encountered an error: {str(e)}")
+        if wandb.run:
+            wandb.alert(title="Pipeline Error", text=str(e))
+            wandb.finish()
+        raise RuntimeError(f"Pipeline encountered an error: {str(e)}")
 
     finally:
-        # Clean up the dataset directory
         try:
-            shutil.rmtree(dataset_dir)
-        except Exception as e:
-            print(f"Error during cleanup: {str(e)}")
-
-        # Ensure the job status is updated to pending if the model was not saved to wandb
-        if 'repo_url' not in locals():
-            await update_job_status(job_id, 'pending')
+            shutil.rmtree("./results")
+        except Exception as cleanup_error:
+            print(f"Cleanup error: {cleanup_error}")

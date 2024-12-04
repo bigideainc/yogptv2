@@ -7,10 +7,7 @@ from yogpt_subnet.validator.utils import fetch_completed_jobs
 import warnings
 from dotenv import load_dotenv
 
-warnings.filterwarnings(
-    "ignore",
-    message="Detected filter using positional arguments. Prefer using the 'filter' keyword argument instead."
-)
+warnings.filterwarnings("ignore",message="Detected filter using positional arguments. Prefer using the 'filter' keyword argument instead.")
 
 load_dotenv()
 
@@ -82,11 +79,6 @@ class ModelRewardChecker(Module):
             logger.info(f"Loss {loss} exceeds or equals threshold {threshold} for job '{job_data.get('jobId')}'")
             return 0, "Loss exceeds or equals threshold"
 
-        # if duration < min_time:
-        #     return 0, f"Training completed too quickly. Expected minimum {min_time} hours, but took {duration:.2f} hours"
-
-        # if duration > max_time:
-        #     return 0, f"Training took longer than expected. Maximum allowed time is {max_time} hours, but took {duration:.2f} hours"
         normalized_loss =sigmoid(threshold-loss)
         reward = training_per_hour * duration* normalized_loss
         logger.info(f"Calculated reward: {reward} for job '{job_data.get('jobId')}'")
@@ -134,11 +126,9 @@ class ModelRewardChecker(Module):
                 uid_scores[miner_uid] = score
             else:
                 logger.warning(f"SS58 address {ss58_address} not found in network, skipping.")
-        
         if not uid_scores:
             logger.error("No valid UIDs were found for the provided SS58 addresses.")
             return
-
         weighted_scores = {uid: self.assign_weight(score) for uid, score in uid_scores.items()}
         uids = list(weighted_scores.keys())
         weights = list(weighted_scores.values())
@@ -151,7 +141,6 @@ class ModelRewardChecker(Module):
         max_score = 1.0 
         weight = int(score * 5000 / max_score)
         return weight
-    
     def cut_to_max_allowed_weights(self, score_dict: dict[int, float], max_allowed_weights: int = 420) -> dict[int, float]:
         sorted_scores = sorted(score_dict.items(), key=lambda x: x[1], reverse=True)
         cut_scores = sorted_scores[:max_allowed_weights]
