@@ -102,7 +102,7 @@ async def fine_tune_llama(dataset_id,epochs, batch_size, learning_rate,hf_token,
             logging_steps=10, 
             eval_strategy="steps",
             save_strategy="steps",
-            eval_steps=500,
+            eval_steps=50,
             save_steps=500,
             save_total_limit=3,
             load_best_model_at_end=True,                    
@@ -127,13 +127,11 @@ async def fine_tune_llama(dataset_id,epochs, batch_size, learning_rate,hf_token,
         # Train model
         start_time = time.time()
         train_result = trainer.train()
-        metrics = train_result.metrics
-        trainer.save_metrics("train", metrics)
-        trainer.save_state()
+        final_loss = train_result.training_loss
         total_training_time = time.time() - start_time
 
         wandb_run.log({
-            "final_loss": metrics.get("training_loss"),
+            "final_loss": final_loss ,
             "training_time": total_training_time,
             "epochs": epochs,
             "batch_size": batch_size,
@@ -149,7 +147,7 @@ async def fine_tune_llama(dataset_id,epochs, batch_size, learning_rate,hf_token,
         metrics.update({
             "training_time": total_training_time,
             "model_repo": repo_url,
-            "final_loss": metrics.get("training_loss"),
+            "final_loss": final_loss ,
             "miner_uid": miner_uid,
             "datasetid":dataset_id,
             "total_epochs": epochs,

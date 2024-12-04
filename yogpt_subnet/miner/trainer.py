@@ -13,11 +13,7 @@ from communex.module.module import Module, endpoint
 from communex.client import CommuneClient
 from communex._common import get_node_url
 from rich.console import Console
-from rich.live import Live
-from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.table import Table
-from rich.text import Text
+
 
 # from yogpt_subnet.miner.finetune.gpt_fine_tune import \
 #     fine_tune_gpt  # type:ignore
