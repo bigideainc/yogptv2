@@ -2,7 +2,7 @@ import os
 import sys
 from dataclasses import dataclass
 from typing import Annotated, Optional
-
+import asyncio
 sys.path.insert(0, os.getcwd())
 
 import typer
