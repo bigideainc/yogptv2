@@ -121,7 +121,6 @@ async def fine_tune_llama(dataset_id,epochs, batch_size, learning_rate,hf_token,
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
             tokenizer=tokenizer,
-            max_seq_length=512,
             data_collator=data_collator,
         )
 
