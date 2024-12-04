@@ -3,10 +3,8 @@ from communex.client import CommuneClient
 from substrateinterface import Keypair
 from loguru import logger
 import math
-from yogpt_subnet.validator.utils import fetch_completed_jobs
 import warnings
 from dotenv import load_dotenv
-
 warnings.filterwarnings("ignore",message="Detected filter using positional arguments. Prefer using the 'filter' keyword argument instead.")
 
 load_dotenv()
