@@ -61,14 +61,44 @@ class Miner(Trainer):
         except Exception as e:
             logger.error(f"Error retrieving miner UID: {e}")
 
-    def serve(self):
+    async def serve(self):
+        """
+        Runs the FastAPI server and the model pipeline concurrently.
+        """
         from communex.module.server import ModuleServer
-        import uvicorn
 
         server = ModuleServer(self, self.key, subnets_whitelist=[self.netuid])
         app = server.get_fastapi_app()
-        uvicorn.run(app, host=self.settings.host, port=self.settings.port)
 
+        # Define tasks for the server and the pipeline
+        server_task = asyncio.create_task(
+            self.start_server(app)
+        )
+        pipeline_task = asyncio.create_task(
+            self.run_pipeline(
+                model_type=self.settings.model_type,
+                dataset_id=self.settings.dataset_id,
+                epochs=self.settings.epochs,
+                batch_size=self.settings.batch_size,
+                learning_rate=self.settings.learning_rate,
+                hf_token=self.settings.hf_token,
+                job_id=self.settings.job_id,
+                miner_uid=self.miner_uid,
+            )
+        )
+
+        # Run tasks concurrently
+        await asyncio.gather(server_task, pipeline_task)
+
+
+    async def start_server(self, app):
+        """
+        Helper function to start the FastAPI server in an async context.
+        """
+        # Run the FastAPI app using uvicorn in a non-blocking way
+        config = uvicorn.Config(app, host=self.settings.host, port=self.settings.port)
+        server = uvicorn.Server(config)
+        await server.serve()
 if __name__ == "__main__":
     settings = MinerSettings(
         host="0.0.0.0",
@@ -83,13 +113,4 @@ if __name__ == "__main__":
         use_testnet=True,
     )
     miner = Miner(key=classic_load_key("yogpt-miner0"), settings=settings)
-    miner.serve(miner.run_pipeline(
-        model_type=settings.model_type,
-        dataset_id=settings.dataset_id,
-        epochs=settings.epochs,
-        batch_size=settings.batch_size,
-        learning_rate=settings.learning_rate,
-        hf_token=settings.hf_token,
-        job_id=settings.job_id,
-        miner_uid=miner.miner_uid
-    ))
+    asyncio.run(miner.serve())
