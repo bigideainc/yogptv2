@@ -95,7 +95,7 @@ def miner(
 
     settings = MinerSettings(use_testnet=ctx.obj.use_testnet, host=host, port=port,model_type=model_type,job_id=job_id,dataset_id=dataset_id,epochs=epochs,batch_size=batch_size,learning_rate=learning_rate,hf_token=hf_token )
     miner = Miner(key=classic_load_key(commune_key), settings=settings)
-    miner.serve()
+    asyncio.run(miner.serve())
 
 # @cli.command("miner")
 # def miner(
