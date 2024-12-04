@@ -81,23 +81,20 @@ def miner(
         ),
     ],
     port: Annotated[int, typer.Argument(help="Port")],
-    username: Annotated[str, typer.Argument(help="Username for authentication")],
-    password: Annotated[str, typer.Argument(help="Password for authentication")],
+    model_type: Annotated[str, typer.Argument(help="Model type")],
+    job_id: Annotated[str, typer.Argument(help="job id ")],
+    dataset_id: Annotated[str, typer.Argument(help="dataset id")],
+    epochs: Annotated[int, typer.Argument(help="number of epochs")],
+    batch_size: Annotated[int, typer.Argument(help="batch size")],
+    learning_rate: Annotated[float, typer.Argument(help="learning rate")],
+    hf_token: Annotated[str, typer.Argument(help="miner huggingface token")],
     testnet: bool = False,
 ):
 
     from yogpt_subnet.miner import Miner, MinerSettings  # type: ignore
-    from yogpt_subnet.miner.auth.auth import authenticate
 
-    # Authenticate with username and password
-    token, miner_id = authenticate(username, password)
-
-    settings = MinerSettings(use_testnet=ctx.obj.use_testnet, host=host, port=port)
+    settings = MinerSettings(use_testnet=ctx.obj.use_testnet, host=host, port=port,model_type=model_type,job_id=job_id,dataset_id=dataset_id,epochs=epochs,batch_size=batch_size,learning_rate=learning_rate,hf_token=hf_token )
     miner = Miner(key=classic_load_key(commune_key), settings=settings)
-
-    # Pass the token and miner_id (if needed) to the miner
-    miner.token = token
-    miner.miner_id = miner_id
     miner.serve()
 
 # @cli.command("miner")

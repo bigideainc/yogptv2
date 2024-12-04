@@ -17,7 +17,6 @@ from trl import SFTConfig, SFTTrainer
 from huggingface_hub import HfApi, login
 import uuid
 from utils.HFManager import commit_to_central_repo
-from utils.Helper import register_completed_job
 from utils.wandb_initializer import initialize_wandb
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)

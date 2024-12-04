@@ -10,7 +10,7 @@ from communex.types import Ss58Address
 from loguru import logger
 from pydantic import BaseModel
 
-from utils import get_ip_port, extract_address
+from .utils import get_ip_port, extract_address
 
 
 
