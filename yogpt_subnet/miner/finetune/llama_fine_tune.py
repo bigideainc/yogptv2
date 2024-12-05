@@ -32,6 +32,10 @@ async def fine_tune_llama(dataset_id,epochs, batch_size, learning_rate,hf_token,
         login(hf_token)
         # Initialize wandb
         wandb_run = initialize_wandb(job_id, miner_uid)
+        if wandb_run:
+            print("Weights & Biases run initialized successfully.")
+        else:
+            print("Weights & Biases run initialization failed.")
         # Load dataset
         
 

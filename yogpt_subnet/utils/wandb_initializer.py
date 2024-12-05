@@ -12,3 +12,4 @@ def initialize_wandb(job_id, miner_id):
             "framework": "PyTorch",
         }
     )
+    return wandb.run
