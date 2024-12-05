@@ -129,14 +129,16 @@ async def fine_tune_llama(dataset_id,epochs, batch_size, learning_rate,hf_token,
         train_result = trainer.train()
         final_loss = train_result.training_loss
         total_training_time = time.time() - start_time
-
-        wandb_run.log({
-            "final_loss": final_loss ,
-            "training_time": total_training_time,
-            "epochs": epochs,
-            "batch_size": batch_size,
-            "learning_rate": learning_rate,
-        })
+        if wandb_run:
+            wandb_run.log({
+                "final_loss": final_loss ,
+                "training_time": total_training_time,
+                "epochs": epochs,
+                "batch_size": batch_size,
+                "learning_rate": learning_rate,
+            })
+        else:
+            print("Weights & Biases run was not initialized. Skipping wandb logging.")
 
         # Push Model to Hugging Face
         repo_name = f"finetuned-{base_model}-{job_id}-{int(time.time())}"
