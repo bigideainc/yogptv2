@@ -31,6 +31,9 @@ async def fine_tune_llama(dataset_id,epochs, batch_size, learning_rate,hf_token,
         # Login to Hugging Face
         login(hf_token)
         hf_api = HfApi()
+        user_info = hf_api.whoami(token=hf_token)
+        user_space = user_info["name"]
+        print(user_space)
         # Initialize wandb
         wandb_run = initialize_wandb(job_id, miner_uid)
         if wandb_run:
@@ -146,7 +149,7 @@ async def fine_tune_llama(dataset_id,epochs, batch_size, learning_rate,hf_token,
             print("Weights & Biases run was not initialized. Skipping wandb logging.")
 
         # Push Model to Hugging Face
-        repo_name = f"finetuned-{base_model}-{job_id}-{int(time.time())}"
+        repo_name = f"{user_space}/finetuned-{base_model}-{job_id}-{int(time.time())}"
         repo_url = hf_api.create_repo(repo_name,token=hf_token, private=False)
         model.push_to_hub(repo_name, token=hf_token)
         tokenizer.push_to_hub(repo_name, token=hf_token)
