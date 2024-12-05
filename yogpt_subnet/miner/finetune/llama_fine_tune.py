@@ -147,7 +147,7 @@ async def fine_tune_llama(dataset_id,epochs, batch_size, learning_rate,hf_token,
 
         # Push Model to Hugging Face
         repo_name = f"finetuned-{base_model}-{job_id}-{int(time.time())}"
-        repo_url = hf_api.create_repo(repo_name,token=token, private=False)
+        repo_url = hf_api.create_repo(repo_name,token=hf_token, private=False)
         model.push_to_hub(repo_name, token=hf_token)
         tokenizer.push_to_hub(repo_name, token=hf_token)
 
