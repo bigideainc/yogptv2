@@ -154,7 +154,7 @@ async def fine_tune_llama(dataset_id,epochs, batch_size, learning_rate,hf_token,
         model.push_to_hub(repo_name, token=hf_token)
         tokenizer.push_to_hub(repo_name, token=hf_token)
 
-        metrics.update({
+        metrics={
             "training_time": total_training_time,
             "model_repo": repo_url,
             "final_loss": final_loss ,
@@ -162,7 +162,7 @@ async def fine_tune_llama(dataset_id,epochs, batch_size, learning_rate,hf_token,
             "datasetid":dataset_id,
             "total_epochs": epochs,
             "job_id": job_id,
-        })
+        }
 
         commit_to_central_repo(repo_url, metrics, miner_uid)
         wandb_run.finish()
