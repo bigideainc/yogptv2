@@ -1,9 +1,13 @@
 from communex.module.module import Module
 from communex.client import CommuneClient
 from substrateinterface import Keypair
+from huggingface_hub import HfApi
+from yogpt_subnet.validator.utils import fetch_training_metrics_commits,fetch_open_jobs,update_job_status
 from loguru import logger
 import math
 import warnings
+import sys
+import websockets
 from dotenv import load_dotenv
 warnings.filterwarnings("ignore",message="Detected filter using positional arguments. Prefer using the 'filter' keyword argument instead.")
 
@@ -13,103 +17,129 @@ def sigmoid(x:float):
     return 1/(1+math.exp(-x))
 
 class ModelRewardChecker(Module):
-    def __init__(self, key: Keypair, netuid: int, client: CommuneClient) -> None:
+    def __init__(self, key: Keypair, netuid: int, client: CommuneClient, repo_name=None) -> None:
         super().__init__()
         self.key = key
         self.netuid = netuid
         self.client = client
+        self.repo_name=repo_name
         logger.info(f"Model reward checker initialized")
-        self.model_thresholds = {
-            "llama2-7b": {"threshold": 0.20, "training_per_hour": 1.2},
-            "OpenELM-270M": {"threshold": 0.50, "training_per_hour": 1.0},
-            "OpenELM-450M": {"threshold": 0.35, "training_per_hour": 1.3},
-            "OpenELM-3B": {"threshold": 0.20, "training_per_hour": 2.2},
-            "GPT2": {"threshold": 0.50, "training_per_hour": 1.5},
-            "LLama3B": {"threshold": 0.35, "training_per_hour": 2.2}}
-        self.default_model_threshold = {"threshold": 4.0, "training_per_hour": 1.5}
 
-    def calculate_reward(self, job_data):
-        logger.info(f"Processing job: {job_data.get('jobId')}")
+    def read_commits(self):
+        """Read commits from the central Hugging Face repository."""
+        commits = fetch_training_metrics_commits(repo_id=self.repo_name)
+        return commits
 
-        model_tuned = job_data.get('model_tuned')
-        if not model_tuned:
-            logger.info(f"No model_tuned provided for job '{job_data.get('jobId')}', using default thresholds.")
-            model_info = self.default_model_threshold
-        else:
-            model_info = self.model_thresholds.get(model_tuned, self.default_model_threshold)
-
-        try:
-            loss = float(job_data.get('loss', None))
-        except (TypeError, ValueError):
-            logger.error(f"Invalid loss value for job '{job_data.get('jobId')}': {job_data.get('loss')}")
-            return 0, f"Invalid loss value: {job_data.get('loss')}"
-
-        duration_str = job_data.get('totalPipelineTime')
-        model_created = job_data.get('huggingFaceRepoId')
-
-        if not model_created or 'huggingface' not in model_created.lower():
-            return 0, "No valid Hugging Face model created"
+    async def group_commits(self, commits):
+        """Group commits by job."""
+        job_groups = {}
+        result = await fetch_open_jobs()
+        print(f"available jobs {result}")
+        for commit in commits:
+            job_id = commit["metrics"]["job_id"]
+            if job_id in result:
+                if job_id not in job_groups:
+                    job_groups[job_id] = []
+                job_groups[job_id].append(commit)
+        return job_groups
+    
+    def extract_metrics_by_job_id(self, job_id, commits):
+        # Initialize an empty list to store the results
+        results = []
         
-        threshold = model_info['threshold']
-        training_per_hour = model_info['training_per_hour']
-        # min_time, max_time = model_info['fine_tuning_time']
+        # Iterate over each commit in the commits list
+        for commit in commits:
+            # Check if the 'job_id' in the commit matches the input job_id
+            if commit['job_id'] == job_id:
+                # Extract the needed information
+                miner_uid = commit['miner_uid']
+                final_loss = commit['metrics']['final_loss']
+                model_repo = commit['model_repo']
+                
+                # Append the extracted data to the results list
+                results.append({
+                    'miner_uid': miner_uid,
+                    'final_loss': final_loss,
+                    'model_repo': model_repo
+                })
+        return results
+    
+    def score_miners(self, metrics_list):
+        """
+        Scores miners based on their final_loss, rewards the best miner, and ranks all miners.
 
-        if duration_str is None:
-            logger.error(f"Job '{job_data.get('jobId')}' has invalid duration format: None")
-            return 0, "Invalid duration format: None"
+        Parameters:
+            metrics_list (list): A list of dictionaries containing 'miner_uid', 'final_loss', and 'model_repo'.
 
-        try:
-            duration_parts = str(duration_str).split(':')
-            if len(duration_parts) == 3: 
-                hours, minutes, seconds = map(int, duration_parts)
-                duration = hours + minutes / 60 + seconds / 3600
-            elif len(duration_parts) == 2: 
-                hours, minutes = map(int, duration_parts)
-                duration = hours + minutes / 60
-            else:
-                logger.error(f"Invalid duration format: {duration_str}")
-                return 0, f"Invalid duration format: {duration_str}"
-        except ValueError:
-            logger.error(f"Unable to parse duration: {duration_str}")
-            return 0, f"Unable to parse duration: {duration_str}"
-
-        if loss is None or loss >= threshold:
-            logger.info(f"Loss {loss} exceeds or equals threshold {threshold} for job '{job_data.get('jobId')}'")
-            return 0, "Loss exceeds or equals threshold"
-
-        normalized_loss =sigmoid(threshold-loss)
-        reward = training_per_hour * duration* normalized_loss
-        logger.info(f"Calculated reward: {reward} for job '{job_data.get('jobId')}'")
-        return reward, f"Reward granted for {duration:.2f} hours of training"
+        Returns:
+            dict: A dictionary containing:
+                - 'ranked_miners': List of miners with their ranking positions, 'miner_uid', and 'final_loss'.
+                - 'best_miner': Details of the best miner with 'miner_uid', 'final_loss', and 'model_repo'.
+                - 'rewards': A dictionary mapping 'miner_uid' to their reward (1 token for the best miner).
+        """
+        # Sort the miners based on their final_loss in ascending order
+        sorted_miners = sorted(metrics_list, key=lambda x: x['final_loss'])
+        
+        # Assign positions (rankings) to the miners
+        ranked_miners = []
+        for position, miner in enumerate(sorted_miners, start=1):
+            ranked_miners.append({
+                'position': position,
+                'miner_uid': miner['miner_uid'],
+                'final_loss': miner['final_loss']
+            })
+        
+        # Identify the best miner (the one with the lowest final_loss)
+        best_miner = sorted_miners[0]
+        
+        # Award one token to the best miner
+        rewards = {best_miner['miner_uid']: 1.0}
+        
+        # Extract details of the best miner
+        best_miner_info = {
+            'miner_uid': best_miner['miner_uid'],
+            'final_loss': best_miner['final_loss'],
+            'model_repo': best_miner['model_repo']
+        }
+        
+        # Return the results
+        return {
+            'ranked_miners': ranked_miners,
+            'best_miner': best_miner_info,
+            'rewards': rewards
+        }
 
     async def reward_completed_jobs(self):
-        logger.info("Checking completed jobs for rewards...")
-        completed_jobs = await fetch_completed_jobs()
+        logger.info("Checking completed jobs to evaluate ...")
+        try:
+            commits = self.read_commits()
+        except Exception as e:
+            logger.error(f"Failed to read commits: {e}")
+            return
+    
+        logger.info("Grouping jobs ...")
+        try:
+            job_groups = await self.group_commits(commits)
+        except Exception as e:
+            logger.error(f"Failed to group jobs: {e}")
+            return
+
+        for job_id, commits in job_groups.items():
+            metrics_list = self.extract_metrics_by_job_id(job_id, commits)
+            if metrics_list:
+                print(f"rewarding and scoring miners for jobid {job_id}")
+                results = self.score_miners(metrics_list)
+                print(f"job results {results}")
+                score_dict = {}
+                for miner_uid, score in results['rewards'].items():
+                    score_dict[miner_uid] = score
+                self.set_weights_jobupdate(score_dict, job_id)
         
-        if isinstance(completed_jobs, str) and completed_jobs == "Unauthorized":
-            logger.error("Unauthorized access when fetching completed jobs")
-            return
-
-        if not completed_jobs:
-            logger.info("No completed jobs found")
-            return
-
-        score_dict = {}
-        for job in completed_jobs:
-            reward, message = self.calculate_reward(job)
-            logger.info(f"Job '{job.get('jobId')}': {reward} - {message}")
-            
-            if reward > 0:
-                score = reward / 100 
-                miner_id = job['minerId']
-                if miner_id in score_dict:
-                    score_dict[miner_id] += score
-                else:
-                    score_dict[miner_id] = score
-
+    def set_weights_jobupdate(self,score_dict: dict[str, float], job_id: str):
         if score_dict:
             self.set_weights(score_dict)
-        
+            update_job_status(job_id)
+
     def set_weights(self, score_dict: dict[str, float]) -> None:
         logger.info(f"Setting weights for miners: {score_dict}")
 
@@ -140,7 +170,9 @@ class ModelRewardChecker(Module):
         weight = int(score * 5000 / max_score)
         return weight
     def cut_to_max_allowed_weights(self, score_dict: dict[int, float], max_allowed_weights: int = 420) -> dict[int, float]:
-        sorted_scores = sorted(score_dict.items(), key=lambda x: x[1], reverse=True)
-        cut_scores = sorted_scores[:max_allowed_weights]
-        logger.info(f"Scores after cutting to max allowed weights: {cut_scores}")
-        return dict(cut_scores)
+        if len(score_dict) > max_allowed_weights:
+            sorted_scores = sorted(score_dict.items(), key=lambda x: x[1], reverse=True)
+            cut_scores = sorted_scores[:max_allowed_weights]
+            logger.info(f"Scores after cutting to max allowed weights: {cut_scores}")
+            return dict(cut_scores)
+        return score_dict
