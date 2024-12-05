@@ -30,7 +30,7 @@ async def fine_tune_llama(dataset_id,epochs, batch_size, learning_rate,hf_token,
     try:
         # Login to Hugging Face
         login(hf_token)
-        hf_api = HfApi(hf_token)
+        hf_api = HfApi()
         # Initialize wandb
         wandb_run = initialize_wandb(job_id, miner_uid)
         if wandb_run:
