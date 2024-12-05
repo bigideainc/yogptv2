@@ -44,7 +44,7 @@ class Trainer(Module):
         self.console.log(f"[blue]Starting pipeline for model type: {model_type}[/blue]")
         try:
             pipeline_function = pipelines[model_type]
-            model_repo_url, loss, accuracy, total_pipeline_time = await pipeline_function(
+            metrics = await pipeline_function(
                 dataset_id=dataset_id,
                 epochs=epochs,
                 batch_size=batch_size,
@@ -53,14 +53,13 @@ class Trainer(Module):
                 job_id=job_id,
                 miner_uid=miner_uid
             )
-            if model_repo_url:
-                self.console.log(f"[green]Model uploaded to: {model_repo_url}[/green]")
-                self.console.log(f"[green]Total pipeline time: {total_pipeline_time}[/green]")
+            if metrics and "model_repo" in metrics:
+                self.console.log(f"[green]Model uploaded to: {metrics['model_repo']}[/green]")
+                self.console.log(f"[green]Total pipeline time: {metrics['training_time']}[/green]")
             else:
-                self.console.log(f"[red]Pipeline for Job ID {job_id} did not return a model URL[/red]")
+                self.console.log(f"[red]Pipeline for Job ID {job_id} did not return a valid model URL[/red]")
         except Exception as e:
             self.console.log(f"[red]Error while running pipeline for Job ID {job_id}: {str(e)}[/red]")
- 
 
 
 
