@@ -17,12 +17,12 @@ def sigmoid(x:float):
     return 1/(1+math.exp(-x))
 
 class ModelRewardChecker(Module):
-    def __init__(self, key: Keypair, netuid: int, client: CommuneClient, repo_name=None) -> None:
+    def __init__(self, key: Keypair, netuid: int, client: CommuneClient) -> None:
         super().__init__()
         self.key = key
         self.netuid = netuid
         self.client = client
-        self.repo_name=repo_name
+        self.repo_name="Tobius/soonish"
         logger.info(f"Model reward checker initialized")
 
     def read_commits(self):

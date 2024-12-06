@@ -71,7 +71,7 @@ class Validator(Module):
             uvicorn.run(app, host=self.settings.host, port=self.settings.port)
         else:
             while True:
-                time.sleep(60)
+                time.sleep(100)
 
 if __name__ == "__main__":
     settings = ValidatorSettings(use_testnet=True)
