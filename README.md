@@ -1,91 +1,179 @@
 
----
-title: "A9Labs Commune Subnet Setup Guide"
-output: html_document
----
+# A9Labs Commune Subnet Setup Guide
 
-# Overview
-The A9Labs Commune Subnet provides an environment for fine-tuning large language models (LLMs) on custom datasets. Participants (miners) train models while validators evaluate submissions, awarding the miner with the lowest evaluation loss.
+## Overview
 
-## Prerequisites
-Ensure you have the following installed:
-- Python 3.8 or higher
-- pip
-- Git
-- curl
-- Atleast 12GB RAM
-- Atleast 1 GPU
+The A9Labs Commune Subnet is a decentralized platform for fine-tuning Large Language Models (LLMs). Here's how it works:
 
-## Installation
-```{r, eval=FALSE}
-# Clone repository
-system("git clone https://github.com/tobiusaolo/yogptv2.git")
+- **Miners**: Train models on custom datasets
+- **Validators**: Evaluate model submissions
+- **Rewards**: Miners with the lowest evaluation loss receive COMAI tokens
+- **Purpose**: Enable distributed, collaborative model improvement
 
-# Navigate to project directory
-setwd("yogptv2")
+## System Requirements
+
+Before starting, ensure your system meets these requirements:
+
+| Component | Minimum Requirement |
+|-----------|-------------------|
+| RAM | 12GB |
+| GPU | 1 GPU (NVIDIA recommended) |
+| Storage | 20GB free space |
+| OS | Ubuntu 20.04+ or similar Linux |
+
+## Required Software
+
+```bash
+# Check Python version (needs 3.8+)
+python --version
+
+# Install system dependencies
+sudo apt update
+sudo apt install -y git curl python3-pip python3-venv
 ```
 
-## Project Setup
-```{r, eval=FALSE}
-# Install dependencies using Poetry
-system("poetry install")
+## Installation Steps
 
-# Enter the Poetry environment
-system("poetry shell")
+1. Clone the repository:
+```bash
+git clone https://github.com/tobiusaolo/yogptv2.git
+cd yogptv2
+```
+
+2. Install project dependencies:
+```bash
+# Install dependencies using Poetry
+pip install poerty
+
+# Activate Poetry environment
+poetry shell
 
 # Install additional requirements
-system("pip install -r requirements.txt")
+pip install -r requirements.txt
 
 # Install TRL package
-system("pip install git+https://github.com/huggingface/trl.git")
+pip install git+https://github.com/huggingface/trl.git
 ```
 
 ## Wallet Setup
-Create a new wallet key:
-```{r, eval=FALSE}
-system("comx key create <your-key-name>")
+
+Create your wallet key:
+```bash
+# Create a new wallet
+comx key create <your-key-name>
+
+# Check wallet balance
+comx query balance <your-key-name>
 ```
 
-## Registering as a Miner or Validator
-To register as a miner or validator, you must have at least 10 COMAI tokens:
-```{r, eval=FALSE}
+> **Important**: Store your wallet mnemonic phrase safely. You'll need at least 10 COMAI tokens to participate.
+
+## Registration
+
+Choose your role (requires 10 COMAI tokens):
+
+```bash
 # Register as a miner
-system("comx module register miner <your-key-name> 12")
+comx module register miner <your-key-name> 12
 
-# Register as a validator
-system("comx module register validator <your-key-name> 12")
+# OR Register as a validator
+comx module register validator <your-key-name> 12
 ```
 
-## Running a Miner Node
-Visit the [A9Labs Dashboard](https://tobiusaolo.github.io/A9labsDashboard/). Select a job and note down the `job_id` and `dataset_id`. Run a miner node:
-```{r, eval=FALSE}
-system("python yogpt_subnet/cli.py miner <your-key-name> <ip-address> <port> <model-type> <job-id> <dataset-id> <epochs> <batch-size> <learning-rate> <your-hf-token>")
+## Running Nodes
+
+### Miner Node Setup
+
+1. Visit [A9Labs Dashboard](https://tobiusaolo.github.io/A9labsDashboard/)
+2. Select a job and note:
+   - `job_id`
+   - `dataset_id`
+
+```bash
+# Run miner node
+python yogpt_subnet/cli.py miner \
+    <your-key-name> \
+    <ip-address> \
+    <port> \
+    <model-type> \
+    <job-id> \
+    <dataset-id> \
+    <epochs> \
+    <batch-size> \
+    <learning-rate> \
+    <your-hf-token>
 ```
 
-## Running a Validator Node
-Run a validator node:
-```{r, eval=FALSE}
-system("python yogpt_subnet/cli.py validator <your-key-name> <ip-address> <port>")
+Example configuration:
+```bash
+python yogpt_subnet/cli.py miner \
+    my_wallet \
+    127.0.0.1 \
+    8081 \
+    gpt2 \
+    job123 \
+    data456 \
+    3 \
+    32 \
+    2e-5 \
+    hf_token123
+```
+## Tips to Outperform Competitors
+
+- Adjust the following parameters for better results:
+  - **Batch size** (`--batchsize`)
+  - **Learning rate** (`--learning_rate`)
+  - **Epochs** (`--epoch`)
+- Experiment with different combinations to optimize performance.
+- Use GPUs with higher VRAM for faster processing.
+
+### Validator Node Setup
+
+```bash
+# Run validator node
+python yogpt_subnet/cli.py validator \
+    <your-key-name> \
+    <ip-address> \
+    <port>
 ```
 
-## Troubleshooting
-### Common Issues
-1. **Poetry not found:** Restart terminal or add Poetry to PATH:
-```{r, eval=FALSE}
-system('export PATH="/home/$USER/.local/bin:$PATH"')
+Example:
+```bash
+python yogpt_subnet/cli.py validator \
+    my_validator \
+    127.0.0.1 \
+    8082
 ```
 
-2. **Dependency issues:** Update pip and clear cache:
-```{r, eval=FALSE}
-system("pip install --upgrade pip --no-cache-dir")
+## Troubleshooting Guide
+
+
+## Performance Tips
+
+1. **GPU Optimization**
+```bash
+# Check GPU status
+nvidia-smi
+
+# Monitor GPU usage
+watch -n 1 nvidia-smi
 ```
 
-3. **Port conflicts:** Check port usage and try a different one.
+2. **Memory Management**
+```bash
+# Check system memory
+free -h
 
-## Support
-For assistance:
-- **Discord:** A9Labs Discord
-- **Telegram:** A9Labs Telegram
+# Clear system cache if needed
+sudo sync && sudo sysctl -w vm.drop_caches=3
+```
+
+## Community Support
+
+- Discord: [Join A9Labs Discord](https://discord.gg/a9labs)
+- Telegram: [Join A9Labs Telegram](https://t.me/a9labs)
+- GitHub Issues: [Report Issues](https://github.com/tobiusaolo/yogptv2/issues)
 
 ## License
-This project is licensed under the MIT License.
+
+This project is licensed under the MIT License. See the LICENSE file for details.
