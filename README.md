@@ -8,7 +8,6 @@ The A9Labs Commune Subnet is a decentralized platform for fine-tuning Large Lang
 - **Miners**: Train models on custom datasets
 - **Validators**: Evaluate model submissions
 - **Rewards**: Miners with the lowest evaluation loss receive COMAI tokens
-- **Purpose**: Enable distributed, collaborative model improvement
 
 ## System Requirements
 
@@ -84,7 +83,7 @@ comx module register validator <your-key-name> 12
 
 ### Miner Node Setup
 
-1. Visit [A9Labs Dashboard](https://tobiusaolo.github.io/A9labsDashboard/)
+1. Visit [A9Labs Dashboard](https://tobiusaolo.github.io/A9labsDashboard/) on the jobs page
 2. Select a job and note:
    - `job_id`
    - `dataset_id`
@@ -126,6 +125,8 @@ python yogpt_subnet/cli.py miner \
   - **Epochs** (`--epoch`)
 - Experiment with different combinations to optimize performance.
 - Use GPUs with higher VRAM for faster processing.
+> **Important**: You can see how you are fairing during in the training procress on [A9Labs Dashboard](https://tobiusaolo.github.io/A9labsDashboard/).
+
 
 ### Validator Node Setup
 
