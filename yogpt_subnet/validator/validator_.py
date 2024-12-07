@@ -32,6 +32,7 @@ class ModelRewardChecker(Module):
 
     async def group_commits(self, commits):
         """Group commits by job."""
+        print(commits)
         job_groups = {}
         result = await fetch_open_jobs()
         print(f"available jobs {result}")

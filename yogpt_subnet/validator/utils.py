@@ -17,7 +17,7 @@ async def fetch_open_jobs()->List[str]:
     open_jobs_list = []
     try:
         base_url = os.getenv('BASE_URL')
-        url = f"{base_url_mode}/jobs/open"
+        url = f"{base_url}/jobs/open"
         response = requests.post(url)
         data=response.json()
         if "open_jobs" in data:

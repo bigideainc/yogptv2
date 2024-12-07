@@ -1,119 +1,91 @@
-# A9Labs Commune Subnet Setup Guide
 
-This guide provides step-by-step instructions for setting up and running both miner and validator nodes on the A9Labs Commune subnet using CommuneX.
+---
+title: "A9Labs Commune Subnet Setup Guide"
+output: html_document
+---
 
-## Table of Contents
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Wallet Setup](#wallet-setup)
-- [Project Setup](#project-setup)
-- [Running a Miner Node](#running-a-miner-node)
-- [Running a Validator Node](#running-a-validator-node)
-- [Troubleshooting](#troubleshooting)
+# Overview
+The A9Labs Commune Subnet provides an environment for fine-tuning large language models (LLMs) on custom datasets. Participants (miners) train models while validators evaluate submissions, awarding the miner with the lowest evaluation loss.
 
 ## Prerequisites
-Before you begin, ensure you have the following installed:
+Ensure you have the following installed:
 - Python 3.8 or higher
-- pip (Python package manager) 
+- pip
 - Git
 - curl
+- Atleast 12GB RAM
+- Atleast 1 GPU
 
 ## Installation
-1. Clone repository:
-```bash
-git clone https://github.com/bigideainc/yogpt.git
-```
+```{r, eval=FALSE}
+# Clone repository
+system("git clone https://github.com/tobiusaolo/yogptv2.git")
 
-2. Navigate to project:
-```bash
-cd yogpt
-```
-
-3. Install Poetry:
-```bash
-curl -sSL https://install.python-poetry.org | python3 -
+# Navigate to project directory
+setwd("yogptv2")
 ```
 
 ## Project Setup
-1. Install dependencies:
-```bash
-poetry install
-```
+```{r, eval=FALSE}
+# Install dependencies using Poetry
+system("poetry install")
 
-2. Enter Poetry shell:
-```bash
-poetry shell
-```
+# Enter the Poetry environment
+system("poetry shell")
 
-3. Install requirements:
-```bash
-pip install -r requirements.txt
-```
+# Install additional requirements
+system("pip install -r requirements.txt")
 
-4. Install TRL package:
-```bash
-pip install git+https://github.com/huggingface/trl.git
+# Install TRL package
+system("pip install git+https://github.com/huggingface/trl.git")
 ```
 
 ## Wallet Setup
 Create a new wallet key:
-```bash
-comx key create <your-key-name>
+```{r, eval=FALSE}
+system("comx key create <your-key-name>")
 ```
-Replace `<your-key-name>` with your desired key identifier.
-Save your key information securely. You'll need this for running nodes.
+
+## Registering as a Miner or Validator
+To register as a miner or validator, you must have at least 10 COMAI tokens:
+```{r, eval=FALSE}
+# Register as a miner
+system("comx module register miner <your-key-name> 12")
+
+# Register as a validator
+system("comx module register validator <your-key-name> 12")
+```
 
 ## Running a Miner Node
-To run a miner node on the testnet:
-```bash
-python yogpt_subnet/cli.py --testnet miner <your-key-name> <ip-address> <port> <username> <password>
-```
-Replace:
-* `<key>`: Your wallet key name created earlier
-* `<ip-address>`: Your node's IP address
-* `<port>`: Port number for the node
-* `<username>`: Your username
-* `<password>`: Your password
-
-Example:
-```bash
-python yogpt_subnet/cli.py --testnet miner mykey 192.168.1.100 8080 user1 pass123
+Visit the [A9Labs Dashboard](https://tobiusaolo.github.io/A9labsDashboard/). Select a job and note down the `job_id` and `dataset_id`. Run a miner node:
+```{r, eval=FALSE}
+system("python yogpt_subnet/cli.py miner <your-key-name> <ip-address> <port> <model-type> <job-id> <dataset-id> <epochs> <batch-size> <learning-rate> <your-hf-token>")
 ```
 
 ## Running a Validator Node
-Similar to running a miner, but use the validator command:
-```bash
-python yogpt_subnet/cli.py --testnet validator <your-key-name> <ip-address> <port> <username> <password>
+Run a validator node:
+```{r, eval=FALSE}
+system("python yogpt_subnet/cli.py validator <your-key-name> <ip-address> <port>")
 ```
 
 ## Troubleshooting
-Common issues and solutions:
-1. **Poetry Installation**
-   * Not found: Restart terminal
-   * PATH issues: `export PATH="/home/$USER/.local/bin:$PATH"`
+### Common Issues
+1. **Poetry not found:** Restart terminal or add Poetry to PATH:
+```{r, eval=FALSE}
+system('export PATH="/home/$USER/.local/bin:$PATH"')
+```
 
-2. **Dependencies**
-   * Update pip: `pip install --upgrade pip`
-   * Cache issues: Use `--no-cache-dir` flag
+2. **Dependency issues:** Update pip and clear cache:
+```{r, eval=FALSE}
+system("pip install --upgrade pip --no-cache-dir")
+```
 
-3. **TRL Installation**
-   * If fails: `pip install --no-cache-dir git+https://github.com/huggingface/trl.git`
-
-4. **Port Issues**
-   * Check if port in use
-   * Try different port number
-   * Check firewall settings
-
-5. **Key Problems**
-   * Verify key name
-   * Check permissions
-   * Try recreating key
+3. **Port conflicts:** Check port usage and try a different one.
 
 ## Support
-For additional support:
-* Discord: A9Labs Discord
-* Telegram: A9Labs Telegram
-* GitHub: YoGPT Repository
+For assistance:
+- **Discord:** A9Labs Discord
+- **Telegram:** A9Labs Telegram
 
 ## License
-This project is licensed under the MIT License - see the LICENSE file for details
+This project is licensed under the MIT License.
