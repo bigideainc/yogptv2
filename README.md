@@ -1,9 +1,9 @@
 
-# A9Labs Commune Subnet Setup Guide
+# Commune Subnet Setup Guide
 
 ## Overview
 
-The A9Labs Commune Subnet is a decentralized platform for fine-tuning Large Language Models (LLMs). Here's how it works:
+The YoGPT (Your Own GPT) Subnet is a decentralized platform for fine-tuning Large Language Models (LLMs). Here's how it works:
 
 - **Miners**: Train models on custom datasets
 - **Validators**: Evaluate model submissions
@@ -169,12 +169,4 @@ free -h
 sudo sync && sudo sysctl -w vm.drop_caches=3
 ```
 
-## Community Support
-
-- Discord: [Join A9Labs Discord](https://discord.gg/a9labs)
-- Telegram: [Join A9Labs Telegram](https://t.me/a9labs)
 - GitHub Issues: [Report Issues](https://github.com/tobiusaolo/yogptv2/issues)
-
-## License
-
-This project is licensed under the MIT License. See the LICENSE file for details.
